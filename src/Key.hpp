@@ -11,7 +11,6 @@
 #include "Waveform.hpp"
 #include "KeyStatus.hpp"
 #include "Sine.hpp"
-#include "Filter2.hpp"
 #include "Controls.hpp"
 
 class Key
@@ -29,15 +28,12 @@ private:
     double freq;
     double freq2;
     double time;
-    std::minstd_rand rnd;
-    std::uniform_real_distribution<float> dist;
     Controls* controls;
-    Filter* filter;
 
 public:
     Key ();
     Key (const double rt);
-    void press (const uint8_t nt, const uint8_t vel, Controls *c, Filter *f);
+    void press (const uint8_t nt, const uint8_t vel, Controls *c);
     void release ();
     void release (const uint8_t nt, const uint8_t vel);
     void off ();
@@ -72,15 +68,12 @@ inline Key::Key (const double rt) :
     start_level_1 (0.0f),
     start_level_2 (0.0f),
     freq (pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0),
-    time (0.0),
-    rnd (std::time (0)),
-    dist (-1.0f, 1.0f),
-    filter ()
+    time (0.0)
 {
 
 }
 
-inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, Filter *f)
+inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c)
 {
 
     controls = c;
@@ -89,10 +82,9 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, Filter
     note = nt;
     velocity = vel;
     freq = pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0;
-    freq2 = pow (2.0, (static_cast<double> (note) - 69.0 + (*controls).get(CONTROL_PITCH_2)) / 12.0) * 440.0;
+    freq2 = pow (2.0, (static_cast<double> (note) - 69.0 + controls->get(P_PITCH_2)) / 12.0) * 440.0;
     time = 0.0;
     status = KEY_PRESSED;
-    filter = f;
     // std::cout << "Starting note with freq: " << freq << std::endl;
 }
 
@@ -133,17 +125,17 @@ inline float Key::adsr(int whichEnvelope)
     float start_level;
     switch (whichEnvelope) {
         case (1):
-            attack = (*controls).get(CONTROL_ATTACK);
-            decay = (*controls).get(CONTROL_DECAY);
-            sustain = (*controls).get(CONTROL_SUSTAIN);
-            release = (*controls).get(CONTROL_RELEASE);
+            attack = controls->get(P_ATTACK);
+            decay = controls->get(P_DECAY);
+            sustain = controls->get(P_SUSTAIN);
+            release = controls->get(P_RELEASE);
             start_level = start_level_1;
             break;
         case (2):
-            attack = (*controls).get(CONTROL_ATTACK_2);
-            decay = (*controls).get(CONTROL_DECAY_2);
-            sustain = (*controls).get(CONTROL_SUSTAIN_2);
-            release = (*controls).get(CONTROL_RELEASE_2);
+            attack = controls->get(P_ATTACK_2);
+            decay = controls->get(P_DECAY_2);
+            sustain = controls->get(P_SUSTAIN_2);
+            release = controls->get(P_RELEASE_2);
             start_level = start_level_2;
             break;
         default:
@@ -177,49 +169,47 @@ inline float Key::adsr(int whichEnvelope)
 
 inline float Key::synthPartials()
 {
-    // return (*filter).valueInWave(freq, position);
-
-    float cutoff_partial = (*controls).get(CONTROL_CUTOFF);
-    if ((*controls).get(CONTROL_ENV_MODE_1) == ENV_CUTOFF_1) {
+    float cutoff_partial = controls->get(P_CUTOFF);
+    if (controls->get(P_ENV_MODE_1) == ENV_CUTOFF_1) {
         cutoff_partial += 4 * adsr(1);
     }
-    if ((*controls).get(CONTROL_ENV_MODE_2) == ENV_CUTOFF_1) {
-        cutoff_partial += 4 * adsr(2) * (*controls).get(CONTROL_ENV_AMT_2);
+    if (controls->get(P_ENV_MODE_2) == ENV_CUTOFF_1) {
+        cutoff_partial += 4 * adsr(2) * controls->get(P_ENV_AMT_2);
     }
-    if ((*controls).get(CONTROL_WAVEFORM_2_MODE) == OSC_CUTOFF_1) {
+    if (controls->get(P_WAVEFORM_2_MODE) == OSC_CUTOFF_1) {
         cutoff_partial += 4 * synth2();
     }
-    return (*filter).resonatedValueInWave(freq, position, cutoff_partial, (*controls).get(CONTROL_RES_WIDTH), (*controls).get(CONTROL_RES_HEIGHT));
+    return controls->filter.resonatedValueInWave(freq, position, cutoff_partial, controls->get(P_RES_WIDTH), controls->get(P_RES_HEIGHT));
 
 }
 
 inline float Key::synth2()
 {
-    float value = valueInWaveform(static_cast<Waveform> ((*controls).get(CONTROL_WAVEFORM_2)), position2);
+    float value = valueInWaveform(static_cast<Waveform> (controls->get(P_WAVEFORM_2)), position2);
 
-    if ((*controls).get(CONTROL_ENV_MODE_1) == ENV_LEVEL_2) value *= adsr(1);
-    if ((*controls).get(CONTROL_ENV_MODE_2) == ENV_LEVEL_2) value *= adsr(2);
+    if (controls->get(P_ENV_MODE_1) == ENV_LEVEL_2) value *= adsr(1);
+    if (controls->get(P_ENV_MODE_2) == ENV_LEVEL_2) value *= adsr(2);
 
-    value *= (*controls).get(CONTROL_LEVEL_2);
+    value *= controls->get(P_LEVEL_2);
     return value;
 }
 
 inline float Key::get ()
 {
     float value = synthPartials() * // Synth partials is 0 for some reason!!!
-                    (*controls).get(CONTROL_LEVEL);
+                    controls->get(P_LEVEL);
 
-    if ((*controls).get(CONTROL_ENV_MODE_1) == ENV_LEVEL_1) {
+    if (controls->get(P_ENV_MODE_1) == ENV_LEVEL_1) {
         value *= adsr(1);
     }
-    if ((*controls).get(CONTROL_ENV_MODE_2) == ENV_LEVEL_1) {
+    if (controls->get(P_ENV_MODE_2) == ENV_LEVEL_1) {
         value *= adsr(2);
     }
-    if ((*controls).get(CONTROL_WAVEFORM_2_MODE) == OSC_AM_1) {
+    if (controls->get(P_WAVEFORM_2_MODE) == OSC_AM_1) {
         value *= 1 + synth2();
     }
 
-    if ((*controls).get(CONTROL_WAVEFORM_2_MODE) == OSC_ADD) {
+    if (controls->get(P_WAVEFORM_2_MODE) == OSC_ADD) {
         float value2 = synth2();
         value += value2;
     }
@@ -236,14 +226,14 @@ inline void Key::proceed ()
 
     // Find oscillator 1's freq:
     float modfreq = freq;
-    modfreq *= pow (2.0, (*controls).get(CONTROL_PITCH) / 12.0);
-    if ((*controls).get(CONTROL_ENV_MODE_1) == ENV_PITCH_1) {
+    modfreq *= pow (2.0, controls->get(P_PITCH) / 12.0);
+    if (controls->get(P_ENV_MODE_1) == ENV_PITCH_1) {
         modfreq *= pow (2.0, adsr(1) * 12 / 12.0);
     }
-    if ((*controls).get(CONTROL_ENV_MODE_2) == ENV_PITCH_1) {
-        modfreq *= pow (2.0, adsr(2) * (*controls).get(CONTROL_ENV_AMT_2) * 4 / 12.0); // Scale by 4 so it covers more
+    if (controls->get(P_ENV_MODE_2) == ENV_PITCH_1) {
+        modfreq *= pow (2.0, adsr(2) * controls->get(P_ENV_AMT_2) * 4 / 12.0); // Scale by 4 so it covers more
     }
-    if ((*controls).get(CONTROL_WAVEFORM_2_MODE) == OSC_FM_1) {
+    if (controls->get(P_WAVEFORM_2_MODE) == OSC_FM_1) {
         modfreq *= 1 + synth2();
     }
     // Move Osc 1 forward correctly
@@ -253,8 +243,8 @@ inline void Key::proceed ()
     position2 += freq2 / rate;
 
     if ((status == KEY_RELEASED) &&
-            (time >= (*controls).get(CONTROL_RELEASE)) &&
-            (time >= (*controls).get(CONTROL_RELEASE_2))) {
+            (time >= controls->get(P_RELEASE)) &&
+            (time >= controls->get(P_RELEASE_2))) {
         off();
     }
 }

@@ -18,12 +18,12 @@
 #include <lv2/core/lv2_util.h>
 #include <lv2/atom/util.h>
 
+#include "Synth.hpp"
 #include "Controls.hpp"
 #include "LinearFader.hpp"
 #include "Key.hpp"
 #include "KeyMap.hpp"
 #include "LowPassBasic.hpp"
-#include "Filter2.hpp"
 
 
 enum PortGroups
@@ -40,46 +40,37 @@ struct Urids
 };
 
 /* class definiton */
-class HarmonicSynth
+class MidiFeeder
 {
 private:
+    std::array<const float*, P_NUM_CONTROLS> control_ptr;
     const LV2_Atom_Sequence* midi_in_ptr;
     float* audio_out_ptr;
     Urids urids;
     double rate;
-    double position;
-    float actual_freq;
-    float actual_level;
     LV2_URID_Map* map;
-    KeyMap keys;
-    LowPassBasic low_pass;
-    Filter filter;
-    Controls controls;
+    Synth synth;
 
 
 public:
-    HarmonicSynth(const double sample_rate, const LV2_Feature *const *features);
-    void connectPort(const uint32_t port, void* data_location);
-    void activate();
-    void run(const uint32_t sample_count);
+    MidiFeeder(const double sample_rate, const LV2_Feature *const *features);
+    inline void connectPort(const uint32_t port, void* data_location);
+    inline bool isEveryControlConnected();
+    inline void activate();
+    inline void run(const uint32_t sample_count);
 
 private:
     void play (const uint32_t start, const uint32_t end);
 };
 
-HarmonicSynth::HarmonicSynth (const double sample_rate, const LV2_Feature *const *features) :
+MidiFeeder::MidiFeeder (const double sample_rate, const LV2_Feature *const *features) :
     midi_in_ptr (nullptr),
     audio_out_ptr (nullptr),
     rate (sample_rate),
-    position (0.0),
-    actual_freq (0.0),
     map (nullptr),
-    keys (),
-    low_pass (),
-    filter (),
-    controls (sample_rate)
+    synth (rate)
 {
-    controls = Controls(sample_rate);
+    control_ptr.fill(nullptr);
     const char* missing = lv2_features_query(
         features,
         LV2_URID__map,
@@ -88,70 +79,42 @@ HarmonicSynth::HarmonicSynth (const double sample_rate, const LV2_Feature *const
         NULL
     );
 
-    if (missing) throw std::invalid_argument ("Feature map not provided by the host. Can't instantiate HarmonicSynth");
+    if (missing) throw std::invalid_argument ("Feature map not provided by the host. Can't instantiate MidiFeeder for OvenMit synth");
 
     urids.midi_MidiEvent = map->map(map->handle, LV2_MIDI__MidiEvent);
 }
 
-void HarmonicSynth::connectPort(const uint32_t port, void* data_location)
+void MidiFeeder::connectPort(const uint32_t port, void* data_location)
 {
-    switch (port)
-    {
-    case PORT_MIDI_IN:
-        midi_in_ptr = static_cast<const LV2_Atom_Sequence*>(data_location);
-        break;
-    case PORT_AUDIO_OUT:
-        audio_out_ptr = static_cast<float*>(data_location);
-        break;
-    default:
-        if (port < PORT_CONTROL + CONTROL_NR)
-        {
-            controls.connectControlPort(port - PORT_CONTROL, data_location);
+    control_ptr[port] = static_cast<const float*>(data_location);
+}
+
+void MidiFeeder::activate()
+{
+}
+
+inline bool MidiFeeder::isEveryControlConnected() {
+
+    for (int i=0; i<P_NUM_CONTROLS; ++i) {
+        if (!control_ptr[i]) {
+            return false;
         }
-        break;
+
     }
+    return true;
 }
 
-void HarmonicSynth::activate()
-{
-    position = 0.0;
-    actual_freq = 440.0;
-    actual_level = 0.1;
-    filter.setWaveform(WAVEFORM_SINE);
-}
-
-void HarmonicSynth::play (const uint32_t start, const uint32_t end)
-{
-    for (uint32_t i = start; i < end; ++i)
-    {
-        audio_out_ptr[i] = 0.0f;
-        keys.startLoop();
-        Key* k;
-        while (k = keys.getNext()) {
-            if (k->isOn()) {
-                audio_out_ptr[i] += k->get();
-                k->proceed();
-            } else {
-                keys.erasePrevious();
-            }
-        }
-    }
-}
-
-void HarmonicSynth::run(const uint32_t sample_count)
+inline void MidiFeeder::run(const uint32_t sample_count)
 {
     if (!(audio_out_ptr && midi_in_ptr)) {
         throw std::invalid_argument ("Not all ports connected");
     }
-    if (!controls.isEveryControlConnected()) {
+    if (!isEveryControlConnected()) {
         throw std::invalid_argument ("Not all controls connected");
     }
 
-    if (controls.updateValues()) {
-        /* filter refreshing and control moving */
-        filter.setWaveform(
-            static_cast<Waveform>(controls.get(CONTROL_WAVEFORM))
-        );
+    for (int i=0; i<P_NUM_CONTROLS; ++i) {
+        synth.setControl(i, *control_ptr[i]);
     }
 
     /* analyze incoming midi data */
@@ -160,7 +123,7 @@ void HarmonicSynth::run(const uint32_t sample_count)
     {
         /* play frames until event */
         const uint32_t frame = ev->time.frames;
-        play (last_frame, frame);
+        synth.outputSamples(audio_out_ptr, last_frame, frame);
         last_frame = frame;
 
         if (ev->body.type == urids.midi_MidiEvent) {
@@ -169,26 +132,20 @@ void HarmonicSynth::run(const uint32_t sample_count)
 
             switch (typ) {
                 case LV2_MIDI_MSG_NOTE_ON:
-                    keys.getKey(msg[1] & 0x7f)->press(
+                    synth.startNote(
                         msg[1], /* note */
-                        msg[2], /* velocity */
-                        &controls,
-                        &filter
+                        msg[2] /* velocity */
                     );
                     break;
                 case LV2_MIDI_MSG_NOTE_OFF:
-                    keys.getKey(msg[1] & 0x7f)->release (msg[1], msg[2]);
+                    synth.releaseNote(msg[1], msg[2]);
                     break;
                 case LV2_MIDI_MSG_CONTROLLER:
                     if (msg[1] == LV2_MIDI_CTL_ALL_NOTES_OFF) {
-                        keys.startLoop();
-                        Key* k;
-                        while (k = keys.getNext()) k->release();
+                        synth.stopAllNotes();
                     }
                     else if (msg[1] == LV2_MIDI_CTL_ALL_SOUNDS_OFF) {
-                        keys.startLoop();
-                        Key* k;
-                        while (k = keys.getNext()) k->mute();
+                        synth.stopAllSounds();
                     }
                     break;
             }
@@ -196,7 +153,7 @@ void HarmonicSynth::run(const uint32_t sample_count)
     }
 
     /* play remaining frames */
-    play(last_frame, sample_count);
+    synth.outputSamples(audio_out_ptr, last_frame, sample_count);
 }
 
 
@@ -204,14 +161,14 @@ void HarmonicSynth::run(const uint32_t sample_count)
 
 static LV2_Handle instantiate (const struct LV2_Descriptor *descriptor, double sample_rate, const char *bundle_path, const LV2_Feature *const *features)
 {
-    HarmonicSynth* m = nullptr;
+    MidiFeeder* m = nullptr;
     try {
-        m = new HarmonicSynth(sample_rate, features);
+        m = new MidiFeeder(sample_rate, features);
     } catch (const std::invalid_argument& ia) {
         std::cerr << ia.what() << std::endl;
         return nullptr;
     } catch (const std::bad_alloc& ba) {
-        std::cerr << "Failed to allocate memory. Can't instantiate HarmonicSynth" << std::endl;
+        std::cerr << "Failed to allocate memory. Can't instantiate MidiFeeder" << std::endl;
         return nullptr;
     }
     return m;
@@ -220,17 +177,17 @@ static LV2_Handle instantiate (const struct LV2_Descriptor *descriptor, double s
 
 static void connect_port (LV2_Handle instance, uint32_t port, void *data_location)
 {
-    HarmonicSynth* m = static_cast<HarmonicSynth*>(instance);
+    MidiFeeder* m = static_cast<MidiFeeder*>(instance);
     if (m) m->connectPort(port, data_location);
 }
 static void activate (LV2_Handle instance)
 {
-    HarmonicSynth* m = static_cast<HarmonicSynth*>(instance);
+    MidiFeeder* m = static_cast<MidiFeeder*>(instance);
     if (m) m->activate();
 }
 static void run (LV2_Handle instance, uint32_t sample_count)
 {
-    HarmonicSynth* m = static_cast<HarmonicSynth*>(instance);
+    MidiFeeder* m = static_cast<MidiFeeder*>(instance);
     if (m) m->run(sample_count);
 }
 static void deactivate (LV2_Handle instance)
@@ -239,7 +196,7 @@ static void deactivate (LV2_Handle instance)
 }
 static void cleanup (LV2_Handle instance)
 {
-    HarmonicSynth* m = static_cast<HarmonicSynth*>(instance);
+    MidiFeeder* m = static_cast<MidiFeeder*>(instance);
     if (m) delete m;
 }
 static const void* extension_data (const char *uri)
