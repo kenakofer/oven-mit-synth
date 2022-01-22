@@ -250,7 +250,7 @@ static const void* extension_data (const char *uri)
 /* descriptor */
 static LV2_Descriptor const descriptor =
 {
-    "https://github.com/kenakofer/lv2-practice/harmonicSynth",
+    "https://github.com/kenakofer/oven-mit-synth",
     instantiate,
     connect_port,
     activate, /* or NULL */

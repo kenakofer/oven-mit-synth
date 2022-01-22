@@ -9,10 +9,10 @@
 @prefix midi: <http://lv2plug.in/ns/ext/midi#> .
 
 
-<https://github.com/kenakofer/lv2-practice/harmonicSynth> a lv2:Plugin , lv2:OscillatorPlugin , doap:Project ;
-    lv2:binary <harmonicSynth.so> ;
-    rdfs:seeAlso <harmonicSynth.ttl> ;
-    doap:name "harmonicSynth" ;
+<https://github.com/kenakofer/oven-mit-synth> a lv2:Plugin , lv2:OscillatorPlugin , doap:Project ;
+    lv2:binary <OvenMit.so> ;
+    rdfs:seeAlso <OvenMit.ttl> ;
+    doap:name "OvenMit" ;
     lv2:optionalFeature lv2:hardRTCapable ;
     lv2:requiredFeature urid:map ;
     lv2:minorVersion 2 ;
