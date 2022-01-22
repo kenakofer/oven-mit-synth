@@ -39,13 +39,11 @@ private:
 public:
     inline Filter()
     {
-        cachedValues01.fill(0.0f);
-        cachedValues06.fill(0.0f);
-        cachedValues10.fill(0.0f);
-        cachedValues20.fill(0.0f);
-        cachedValues30.fill(0.0f);
-        cachedValues40.fill(0.0f);
-        cachedValues50.fill(0.0f);
+        setWaveform(WAVEFORM_SINE);
+    }
+    inline Filter(Waveform w)
+    {
+        setWaveform(w);
     }
 
     inline void setWaveform(Waveform w) {
