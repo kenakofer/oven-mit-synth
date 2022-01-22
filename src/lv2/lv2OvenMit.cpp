@@ -18,8 +18,8 @@
 #include <lv2/core/lv2_util.h>
 #include <lv2/atom/util.h>
 
-#include "Synth.hpp"
-#include "Param.hpp"
+#include "../Synth.hpp"
+#include "../Param.hpp"
 
 
 enum PortGroups
@@ -36,7 +36,7 @@ struct Urids
 };
 
 /* class definiton */
-class MidiFeeder
+class OvenMitLV2
 {
 private:
     std::array<const float*, P_NUM_CONTROLS> control_ptr;
@@ -49,7 +49,7 @@ private:
 
 
 public:
-    MidiFeeder(const double sample_rate, const LV2_Feature *const *features);
+    OvenMitLV2(const double sample_rate, const LV2_Feature *const *features);
     inline void connectPort(const uint32_t port, void* data_location);
     inline bool isEveryControlConnected();
     inline void activate();
@@ -59,7 +59,7 @@ private:
     void play (const uint32_t start, const uint32_t end);
 };
 
-MidiFeeder::MidiFeeder (const double sample_rate, const LV2_Feature *const *features) :
+OvenMitLV2::OvenMitLV2 (const double sample_rate, const LV2_Feature *const *features) :
     midi_in_ptr (nullptr),
     audio_out_ptr (nullptr),
     rate (sample_rate),
@@ -75,12 +75,12 @@ MidiFeeder::MidiFeeder (const double sample_rate, const LV2_Feature *const *feat
         NULL
     );
 
-    if (missing) throw std::invalid_argument ("Feature map not provided by the host. Can't instantiate MidiFeeder for OvenMit synth");
+    if (missing) throw std::invalid_argument ("Feature map not provided by the host. Can't instantiate OvenMitLV2 for OvenMit synth");
 
     urids.midi_MidiEvent = map->map(map->handle, LV2_MIDI__MidiEvent);
 }
 
-void MidiFeeder::connectPort(const uint32_t port, void* data_location)
+void OvenMitLV2::connectPort(const uint32_t port, void* data_location)
 {
     switch (port)
     {
@@ -99,11 +99,11 @@ void MidiFeeder::connectPort(const uint32_t port, void* data_location)
     }
 }
 
-void MidiFeeder::activate()
+void OvenMitLV2::activate()
 {
 }
 
-inline bool MidiFeeder::isEveryControlConnected() {
+inline bool OvenMitLV2::isEveryControlConnected() {
 
     for (int i=0; i<P_NUM_CONTROLS; ++i) {
         if (!control_ptr[i]) {
@@ -114,7 +114,7 @@ inline bool MidiFeeder::isEveryControlConnected() {
     return true;
 }
 
-inline void MidiFeeder::run(const uint32_t sample_count)
+inline void OvenMitLV2::run(const uint32_t sample_count)
 {
     if (!(audio_out_ptr && midi_in_ptr)) {
         throw std::invalid_argument ("Not all ports connected");
@@ -171,14 +171,14 @@ inline void MidiFeeder::run(const uint32_t sample_count)
 
 static LV2_Handle instantiate (const struct LV2_Descriptor *descriptor, double sample_rate, const char *bundle_path, const LV2_Feature *const *features)
 {
-    MidiFeeder* m = nullptr;
+    OvenMitLV2* m = nullptr;
     try {
-        m = new MidiFeeder(sample_rate, features);
+        m = new OvenMitLV2(sample_rate, features);
     } catch (const std::invalid_argument& ia) {
         std::cerr << ia.what() << std::endl;
         return nullptr;
     } catch (const std::bad_alloc& ba) {
-        std::cerr << "Failed to allocate memory. Can't instantiate MidiFeeder" << std::endl;
+        std::cerr << "Failed to allocate memory. Can't instantiate OvenMitLV2" << std::endl;
         return nullptr;
     }
     return m;
@@ -187,17 +187,17 @@ static LV2_Handle instantiate (const struct LV2_Descriptor *descriptor, double s
 
 static void connect_port (LV2_Handle instance, uint32_t port, void *data_location)
 {
-    MidiFeeder* m = static_cast<MidiFeeder*>(instance);
+    OvenMitLV2* m = static_cast<OvenMitLV2*>(instance);
     if (m) m->connectPort(port, data_location);
 }
 static void activate (LV2_Handle instance)
 {
-    MidiFeeder* m = static_cast<MidiFeeder*>(instance);
+    OvenMitLV2* m = static_cast<OvenMitLV2*>(instance);
     if (m) m->activate();
 }
 static void run (LV2_Handle instance, uint32_t sample_count)
 {
-    MidiFeeder* m = static_cast<MidiFeeder*>(instance);
+    OvenMitLV2* m = static_cast<OvenMitLV2*>(instance);
     if (m) m->run(sample_count);
 }
 static void deactivate (LV2_Handle instance)
@@ -206,7 +206,7 @@ static void deactivate (LV2_Handle instance)
 }
 static void cleanup (LV2_Handle instance)
 {
-    MidiFeeder* m = static_cast<MidiFeeder*>(instance);
+    OvenMitLV2* m = static_cast<OvenMitLV2*>(instance);
     if (m) delete m;
 }
 static const void* extension_data (const char *uri)
