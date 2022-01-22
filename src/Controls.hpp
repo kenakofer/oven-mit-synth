@@ -53,7 +53,7 @@ class Controls {
             if (value != control[index]) {
                 control[index] = limit<float> (value, controlLimit[index].first, controlLimit[index].second);
                 // if (i == P_LEVEL) controlLevel.set (control[i], 0.01 * rate);
-                if (i == P_WAVEFORM) {
+                if (index == P_WAVEFORM) {
                     filter.setWaveform(static_cast<Waveform>(value));
                 }
             }
@@ -70,21 +70,6 @@ class Controls {
         inline float getAbsolute(Param index) {
             return control[index];
         }
-        // inline double proceed() {
-            // //MONO stuff
-            // float freq = control[P_PITCH_2];
-            // position += freq / rate;
-            // if (control[P_WAVEFORM_2] == WAVEFORM_SQUARE) {
-            //     if (control[P_WAVEFORM_2_TARGET] == LEVEL_1) {
-            //         float p = fmod(position, 1.0f);
-            //         float val = (p < 0.5f ? 1.0f : -1.0f);
-            //         val *= control[P_LEVEL_2];
-            //         moddedControl[P_LEVEL] = val;
-            //         // std::cout << "Mod control: " << val << std::endl;
-            //     }
-            // }
-            // return position;
-        // }
 };
 
 #endif

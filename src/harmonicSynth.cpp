@@ -19,11 +19,7 @@
 #include <lv2/atom/util.h>
 
 #include "Synth.hpp"
-#include "Controls.hpp"
-#include "LinearFader.hpp"
-#include "Key.hpp"
-#include "KeyMap.hpp"
-#include "LowPassBasic.hpp"
+#include "Param.hpp"
 
 
 enum PortGroups
@@ -86,7 +82,21 @@ MidiFeeder::MidiFeeder (const double sample_rate, const LV2_Feature *const *feat
 
 void MidiFeeder::connectPort(const uint32_t port, void* data_location)
 {
-    control_ptr[port] = static_cast<const float*>(data_location);
+    switch (port)
+    {
+    case PORT_MIDI_IN:
+        midi_in_ptr = static_cast<const LV2_Atom_Sequence*>(data_location);
+        break;
+    case PORT_AUDIO_OUT:
+        audio_out_ptr = static_cast<float*>(data_location);
+        break;
+    default:
+        if (port < PORT_CONTROL + P_NUM_CONTROLS)
+        {
+            control_ptr[port - PORT_CONTROL] = static_cast<const float*>(data_location);
+        }
+        break;
+    }
 }
 
 void MidiFeeder::activate()
