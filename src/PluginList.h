@@ -1,0 +1,1 @@
+DECLARE_EFFECT("Oven Mit Synthesizer", OvenMit)
