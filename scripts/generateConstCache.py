@@ -10,40 +10,43 @@ CACHE_SAMPLES = 1024
 
 TYPE = "constexpr std::array<std::array<const float, CACHE_SAMPLES>, CACHE_PARTIALS>"
 
-def get_sin_at(partial, sample):
+def get_sin_at(partial_index, sample):
+    partial = partial_index + 1
     if partial > 1:
         return 0
-    return sin(2 * pi * (partial+1) * sample/CACHE_SAMPLES)
+    return sin(2 * pi * partial * sample/CACHE_SAMPLES)
 
-def get_saw_at(partial, sample):
+def get_saw_at(partial_index, sample):
+    partial = partial_index + 1
     factor = 1 / partial
     if partial % 2 == 0:
         factor *= -1
 
-    return factor * sin(2 * pi * (partial+1) * sample/CACHE_SAMPLES)
+    return factor * sin(2 * pi * partial * sample/CACHE_SAMPLES)
 
-def get_square_at(partial, sample):
+def get_square_at(partial_index, sample):
+    partial = partial_index + 1
     if partial % 2 == 0:
         return 0
 
-    return 1 / partial * sin(2 * pi * (partial+1) * sample/CACHE_SAMPLES)
+    return 1 / partial * sin(2 * pi * partial * sample/CACHE_SAMPLES)
 
-def get_triangle_at(partial, sample):
+def get_triangle_at(partial_index, sample):
+    partial = partial_index + 1
     if partial % 2 == 0:
         return 0
     factor = 1 / partial / partial
     if partial % 4 == 3:
         factor *= -1
 
-    return factor * sin(2 * pi * (partial+1) * sample/CACHE_SAMPLES)
+    return factor * sin(2 * pi * partial * sample/CACHE_SAMPLES)
 
 def build_cache_for_waveform(f):
     cache = []
-    cache.append([f(1,s) for s in range(CACHE_SAMPLES)])
+    cache.append([f(0,s) for s in range(CACHE_SAMPLES)])
 
     for partial_index in range(1, CACHE_PARTIALS):
-        partial = partial_index + 1
-        cache.append([cache[partial_index-1][s] + f(partial, s) for s in range(CACHE_SAMPLES)])
+        cache.append([cache[partial_index-1][s] + f(partial_index, s) for s in range(CACHE_SAMPLES)])
 
     return cache
 
