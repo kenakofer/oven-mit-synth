@@ -37,6 +37,7 @@ enum Waveform
 
 inline float valueFromCache(Waveform waveform, float partial_index, float position) {
     if (partial_index >= CACHE_PARTIALS) partial_index = CACHE_PARTIALS - 0.01f;
+    if (partial_index < 0) partial_index = 0.0f;
     if (position >= 1 || position < 0) position = fmod(position, 1.0);
 
     const int i = (int)(CACHE_SAMPLES * position);

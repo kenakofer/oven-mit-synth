@@ -79,7 +79,9 @@ public:
 
         const float pos = fmod(position, 1.0);
 
-        return valueFromCache(waveform, cutoff_partial, pos);
+        if (freq * cutoff_partial > 20000) cutoff_partial = 20000.0f / freq;
+
+        return valueFromCache(waveform, cutoff_partial-1, pos);
     }
 
     inline float valueInNoise(float freq, float position, float cutoff_partial) {
