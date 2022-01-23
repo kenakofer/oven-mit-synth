@@ -51,37 +51,18 @@ public:
     }
 
     inline float resonatedValueInWave(float freq, float position, float cutoff_partial, float res_width, float res_height) {
-        float value = valueInWave(freq, position, cutoff_partial);
-        if (res_height <= 0.0) return value;
-
-        //TODO remove
-        return value;
-
-        int bottom = (int)(cutoff_partial - res_width*2) + 1;
-        if (bottom <= 1) bottom = 1; // We don't want to amplify the fundamental maybe
-        const int top = (int)cutoff_partial + 1;
-        const float center = cutoff_partial - res_width;
-        const float pos = fmod(position, 1.0);
-
-        for (int p = bottom; p < top; p++) {
-            // if (p >= PARTIAL_NR) break;
-            if (freq * (p+1) > 20000) break;
-
-            value += sin(2.0 * M_PI * (p+1) * pos) *
-                        // getPartialAmplitude(waveform, p+1) *
-                        res_height * (1 - (abs(center - p) / res_width));
-        }
-        return value;
-    }
-
-    inline float valueInWave(float freq, float position, float cutoff_partial) {
         if (waveform == WAVEFORM_NOISE) return valueInNoise(freq, position, cutoff_partial);
 
         const float pos = fmod(position, 1.0);
 
         if (freq * cutoff_partial > 20000) cutoff_partial = 20000.0f / freq;
+        float value = valueFromCache(waveform, cutoff_partial-1, pos);
 
-        return valueFromCache(waveform, cutoff_partial-1, pos);
+        if (res_height <= 0.0) return value;
+
+        float resonance = value - valueFromCache(waveform, cutoff_partial-1-res_width, pos);
+
+        return value + resonance * res_height;
     }
 
     inline float valueInNoise(float freq, float position, float cutoff_partial) {
