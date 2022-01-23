@@ -1,6 +1,5 @@
 #include "AudioPluginUtil.h"
 #include "Key.hpp"
-#include "Filter2.hpp"
 #include <iostream>
 
 namespace OvenMit
@@ -47,7 +46,6 @@ namespace OvenMit
     {
         Key keys[MAX_KEYS];
         Controls controls;
-        Filter filter;
     };
 
     inline OvenMitInstance* GetOvenMitInstance(int index)
@@ -61,10 +59,8 @@ namespace OvenMit
         {
             initialized[index] = true;
             instance[index].controls = Controls(44100);
-            instance[index].filter = Filter();
-            instance[index].filter.setWaveform(WAVEFORM_SINE);
             instance[index].keys[0] = Key(44100);
-            instance[index].keys[0].press(68, 127, &(instance[index].controls), &(instance[index].filter));
+            instance[index].keys[0].press(68, 127, &(instance[index].controls));
         }
         // std::cout << "    ...finished" << std::endl;
         return &instance[index];
@@ -152,7 +148,7 @@ namespace OvenMit
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_TestKeyPress() {
         // std::cout << "OvenMit_TestKeyPress..." << std::endl;
         OvenMitInstance* instance = GetOvenMitInstance(0);
-        instance->keys[0].press(69, 127, &(instance->controls), &(instance->filter));
+        instance->keys[0].press(69, 127, &(instance->controls));
         // std::cout << "   ...finished." << std::endl;
     }
 
@@ -176,11 +172,6 @@ namespace OvenMit
         data->parameters[index] = value;
         OvenMitInstance* instance = GetOvenMitInstance((int)data->parameters[P_INSTANCE]);
         instance->controls.set(static_cast<ControlPorts>(index), value);
-        if (index == P_WAVEFORM) {
-            instance->filter.setWaveform(
-                static_cast<Waveform>((int)value)
-            );
-        }
         // std::cout << "   ...finished." << std::endl;
         return UNITY_AUDIODSP_OK;
     }

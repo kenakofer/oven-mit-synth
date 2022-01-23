@@ -25,9 +25,6 @@ enum EnvelopeModes
 };
 
 class Controls {
-    public:
-        Filter filter;
-
     private:
         std::array<float, P_NUM_CONTROLS> control;
         std::array<float, P_NUM_CONTROLS> moddedControl;
@@ -52,10 +49,6 @@ class Controls {
             bool updated = false;
             if (value != control[index]) {
                 control[index] = limit<float> (value, controlLimit[index].first, controlLimit[index].second);
-                // if (i == P_LEVEL) controlLevel.set (control[i], 0.01 * rate);
-                if (index == P_WAVEFORM) {
-                    filter.setWaveform(static_cast<Waveform>(value));
-                }
             }
         }
         inline float get(Param index) {

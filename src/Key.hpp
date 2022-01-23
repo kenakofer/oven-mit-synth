@@ -17,7 +17,6 @@ class Key
 {
 private:
     KeyStatus status;
-    Waveform waveform;
     uint8_t note;
     uint8_t velocity;
     double rate;
@@ -59,7 +58,6 @@ inline Key::Key () :
 
 inline Key::Key (const double rt) :
     status (KEY_OFF),
-    waveform (WAVEFORM_SINE),
     note (0),
     velocity (0),
     rate (rt),
@@ -179,8 +177,13 @@ inline float Key::synthPartials()
     if (controls->get(P_WAVEFORM_2_MODE) == OSC_CUTOFF_1) {
         cutoff_partial += 4 * synth2();
     }
-    return controls->filter.resonatedValueInWave(freq, position, cutoff_partial, controls->get(P_RES_WIDTH), controls->get(P_RES_HEIGHT));
-
+    return resonatedValueInWave(
+        static_cast<Waveform> (controls->get(P_WAVEFORM)),
+        freq,
+        position,
+        cutoff_partial,
+        controls->get(P_RES_WIDTH), controls->get(P_RES_HEIGHT)
+    );
 }
 
 inline float Key::synth2()
