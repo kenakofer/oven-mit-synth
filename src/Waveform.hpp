@@ -3,6 +3,7 @@
 
 #include <array>
 #include "ConstCache.hpp"
+#include "whiteband500to1k.hpp"
 
 enum Waveform
 {
@@ -52,6 +53,22 @@ inline float valueFromCache(Waveform waveform, float partial_index, float positi
         case WAVEFORM_SAW:      return p1 * CACHE_SAW[bottom_partial][i] + p2 * CACHE_SAW[bottom_partial+1][i];
         default:                return 0.0f;
     }
+}
+
+const float SAMPLES_PER_NOISE_CYCLE = 44100.0f / 750;
+inline float valueFromNoiseCache(float partial_index, float position) {
+    if (partial_index >= WHITEBAND500TO1K_PARTIALS-2) partial_index = WHITEBAND500TO1K_PARTIALS - 2 - .01;
+    if (partial_index < 0) partial_index = 0.0f;
+
+    int i = (int)(WHITEBAND500TO1K_LENGTH * position / SAMPLES_PER_NOISE_CYCLE);
+    i %= WHITEBAND500TO1K_LENGTH;
+
+    const int bottom_partial = (int)partial_index;
+    const float p2 = partial_index - bottom_partial;
+    const float p1 = 1.0f - p2;
+
+    return p1 * CACHE_WHITEBAND500TO1K[bottom_partial][i] + p2 * CACHE_WHITEBAND500TO1K[bottom_partial+1][i];
+
 }
 
 inline float valueInWaveform(Waveform waveform, double position) {

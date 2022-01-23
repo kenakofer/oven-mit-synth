@@ -77,7 +77,6 @@ if __name__ == "__main__":
             string += "{"
             float_strings = map(lambda v: "{:10.6f}f".format(v), row)
             string += ",".join(float_strings)
-            # string += ",".join(str(row))
             string += "},\n"
         string = string[:-2] # Remove final comma and newline
         print(string)

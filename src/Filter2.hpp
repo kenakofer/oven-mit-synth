@@ -4,7 +4,6 @@
 
 #include <math.h>
 #include "Waveform.hpp"
-#include "whiteband500to1k.hpp"
 
 const int CACHED_WAVE_SAMPLES = 512;
 
@@ -51,7 +50,7 @@ public:
     }
 
     inline float resonatedValueInWave(float freq, float position, float cutoff_partial, float res_width, float res_height) {
-        if (waveform == WAVEFORM_NOISE) return valueInNoise(freq, position, cutoff_partial);
+        if (waveform == WAVEFORM_NOISE) return valueInNoise(freq, position, cutoff_partial, res_width, res_height);
 
         const float pos = fmod(position, 1.0);
 
@@ -65,25 +64,17 @@ public:
         return value + resonance * res_height;
     }
 
-    const float SAMPLES_PER_NOISE_CYCLE = 44100.0f / 750;
+    // const float SAMPLES_PER_NOISE_CYCLE = 44100.0f / 750;
 
-    inline float valueInNoise(float freq, float position, float cutoff_partial) {
-        float value = 0.0f;
-        float i=0.0f;
-        while (i < 20) {
-            if ((freq * (i+1)) > (44100 / 2)) break;
-            if (i-1 >= cutoff_partial) break;
+    inline float valueInNoise(float freq, float position, float cutoff_partial, float res_width, float res_height) {
+        if (freq * 3 * cutoff_partial  > 21000) cutoff_partial = 21000.0f / freq / 3;
+            // cutoff_partial = 20000 /
+        float value = valueFromNoiseCache(cutoff_partial-1, position);
+        if (res_height <= 0.0) return value;
 
-            int index = ((int)(SAMPLES_PER_NOISE_CYCLE * position * (i+1))) % WHITEBAND500TO1K_LENGTH;
-            float factor = 1.0;
-            if ((cutoff_partial - 1 < (i-1)) && ((i-1) < cutoff_partial)) {
-                factor = cutoff_partial - (i-1);
-            }
-            value += WHITEBAND500TO1K_SAMPLES[index] * factor;
-            if (i==0.0f) i += .85f;
-            else i += .95;
-        }
-        return value;
+        float resonance = value - valueFromNoiseCache(cutoff_partial-1-res_width, position);
+
+        return value + resonance * res_height;
     }
 
 };

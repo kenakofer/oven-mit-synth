@@ -85,7 +85,7 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c)
     freq2 = pow (2.0, (static_cast<double> (note) - 69.0 + controls->get(P_PITCH_2)) / 12.0) * 440.0;
     time = 0.0;
     status = KEY_PRESSED;
-    // std::cout << "Starting note with freq: " << freq << std::endl;
+    std::cout << "Starting note with freq: " << freq << std::endl;
 }
 
 inline void Key::release ()
