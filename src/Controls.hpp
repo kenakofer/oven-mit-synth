@@ -23,6 +23,11 @@ enum EnvelopeModes
     ENV_CUTOFF_1,
     ENV_LEVEL_2
 };
+enum FilterTypes
+{
+    FILTER_LOWPASS,
+    FILTER_HIGHPASS
+};
 
 class Controls {
     private:

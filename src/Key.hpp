@@ -83,7 +83,7 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c)
     freq2 = pow (2.0, (static_cast<double> (note) - 69.0 + controls->get(P_PITCH_2)) / 12.0) * 440.0;
     time = 0.0;
     status = KEY_PRESSED;
-    std::cout << "Starting note with freq: " << freq << std::endl;
+    // std::cout << "Starting note with freq: " << freq << std::endl;
 }
 
 inline void Key::release ()
@@ -177,13 +177,23 @@ inline float Key::synthPartials()
     if (controls->get(P_WAVEFORM_2_MODE) == OSC_CUTOFF_1) {
         cutoff_partial += 4 * synth2();
     }
-    return resonatedValueInWave(
-        static_cast<Waveform> (controls->get(P_WAVEFORM)),
-        freq,
-        position,
-        cutoff_partial,
-        controls->get(P_RES_WIDTH), controls->get(P_RES_HEIGHT)
-    );
+    if (controls->get(P_FILTER) == FILTER_LOWPASS) {
+        return lowPassInWave(
+            static_cast<Waveform> (controls->get(P_WAVEFORM)),
+            freq,
+            position,
+            cutoff_partial,
+            controls->get(P_RES_WIDTH), controls->get(P_RES_HEIGHT)
+        );
+    } else {
+        return highPassInWave(
+            static_cast<Waveform> (controls->get(P_WAVEFORM)),
+            freq,
+            position,
+            cutoff_partial,
+            controls->get(P_RES_WIDTH), controls->get(P_RES_HEIGHT)
+        );
+    }
 }
 
 inline float Key::synth2()

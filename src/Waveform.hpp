@@ -37,7 +37,7 @@ enum Waveform
 // }
 
 inline float valueFromCache(Waveform waveform, float partial_index, float position) {
-    if (partial_index >= CACHE_PARTIALS) partial_index = CACHE_PARTIALS - 0.01f;
+    if (partial_index >= CACHE_PARTIALS-1) partial_index = CACHE_PARTIALS - 1 - 0.01f;
     if (partial_index < 0) partial_index = 0.0f;
     position = fmod(position, 1.0);
 
@@ -45,6 +45,8 @@ inline float valueFromCache(Waveform waveform, float partial_index, float positi
     const int bottom_partial = (int)partial_index;
     const float p2 = partial_index - bottom_partial;
     const float p1 = 1.0f - p2;
+
+    // std::cout << "Actual partial: " << partial_index << std::endl;
     switch (waveform)
     {
         case WAVEFORM_SINE:     return p1 * CACHE_SINE[bottom_partial][i] + p2 * CACHE_SINE[bottom_partial+1][i];
