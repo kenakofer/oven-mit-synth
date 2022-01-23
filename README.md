@@ -1,4 +1,5 @@
-## OvenMit Synthesizer
+
+## ![Oven mit logo](oven-mit-diagonal.png) OvenMit Synthesizer
 
 kenakofer's first ever synthesizer! Coming initially out of [BMusic's excellent tutoral series for lv2 synthesizers](https://www.youtube.com/watch?v=51eHCA4oCEI&list=PLkuRaNsK2AJ0D8uhRIjftgmqVW0yvDfMx), the developer decided to explore a bit. Since they didn't copy any particular features or techniques from the other open source synths out there, this is probably bad in some unforseen ways.
 
