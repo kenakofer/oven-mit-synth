@@ -65,19 +65,19 @@ public:
         return value + resonance * res_height;
     }
 
-    inline float valueInNoise(float freq, float position, float cutoff_partial) {
-        const float samples_per_cycle = 44100.0f / 750;
+    const float SAMPLES_PER_NOISE_CYCLE = 44100.0f / 750;
 
+    inline float valueInNoise(float freq, float position, float cutoff_partial) {
         float value = 0.0f;
         float i=0.0f;
         while (i < 20) {
             if ((freq * (i+1)) > (44100 / 2)) break;
-            if (i >= cutoff_partial) break;
+            if (i-1 >= cutoff_partial) break;
 
-            int index = ((int)(samples_per_cycle * position * (i+1))) % WHITEBAND500TO1K_LENGTH;
+            int index = ((int)(SAMPLES_PER_NOISE_CYCLE * position * (i+1))) % WHITEBAND500TO1K_LENGTH;
             float factor = 1.0;
             if ((cutoff_partial - 1 < (i-1)) && ((i-1) < cutoff_partial)) {
-                factor = 1.0f - (cutoff_partial - (i-1));
+                factor = cutoff_partial - (i-1);
             }
             value += WHITEBAND500TO1K_SAMPLES[index] * factor;
             if (i==0.0f) i += .85f;
