@@ -15,10 +15,12 @@
 
 class Key
 {
-private:
-    KeyStatus status;
+public:
     uint8_t note;
     uint8_t velocity;
+
+private:
+    KeyStatus status;
     double rate;
     double position;
     double position2;

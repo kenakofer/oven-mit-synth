@@ -40,14 +40,25 @@ public:
         for (uint32_t i = start; i < end; ++i)
         {
             audio_out_ptr[i] = 0.0f;
-            keys.startLoop();
-            Key* k;
-            while (k = keys.getNext()) {
-                if (k->isOn()) {
-                    audio_out_ptr[i] += k->get();
-                    k->proceed();
-                } else {
-                    keys.erasePrevious();
+            if (controls.get(P_VOICE_MODE) == VOICE_POLY) {
+                keys.startLoop();
+                Key* k;
+                while (k = keys.getNext()) {
+                    if (k->isOn()) {
+                        audio_out_ptr[i] += k->get();
+                        k->proceed();
+                    } else {
+                        keys.erasePrevious();
+                    }
+                }
+            } else if (controls.get(P_VOICE_MODE) == VOICE_PORTA) {
+                if (keys.hasAtLeast(1)) {
+                    if (monoKey.isOn()) {
+                        audio_out_ptr[i] += monoKey.get();
+                        monoKey.proceed();
+                    } else {
+                        keys.eraseIndex(monoKey.note);
+                    }
                 }
             }
         }
@@ -63,13 +74,42 @@ public:
             velocity,
             &controls
         );
+        if (controls.get(P_VOICE_MODE) != VOICE_POLY) {
+            monoKey.press(
+                note,
+                velocity,
+                &controls
+            );
+        }
     }
 
-    inline void releaseNote(const int note, const int velocity) {
-        keys.getKey(note & 0x7f)->release(
+    inline void releaseNote(int note, const int velocity) {
+        note = note & 0x7f;
+        keys.getKey(note)->release(
             note,
             velocity
         );
+        if (controls.get(P_VOICE_MODE) != VOICE_POLY) {
+            if (monoKey.note == note) {
+                if (keys.hasAtLeast(2)) {
+                    // Immediately erase the released key and press the next
+                    keys.eraseIndex(note);
+                    monoKey.press(
+                        keys.rotateKeyOrder()->note, // Play the held note we haven't played in the longest
+                        monoKey.velocity,
+                        &controls
+                    );
+                } else {
+                    // This is the only note. Do a normal release.
+                    monoKey.release();
+                }
+            } else {
+                // Since we weren't playing this note, immediately erase the
+                // released key so we don't accidently pivot to it later. No
+                // audible change happens here.
+                keys.eraseIndex(note);
+            }
+        }
     }
 
     inline void stopAllNotes() {

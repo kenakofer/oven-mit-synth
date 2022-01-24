@@ -70,6 +70,12 @@ public:
         n->isActive = false;
     }
 
+    inline void eraseIndex(int index) {
+        Node* n = &nodeArray[index];
+        if (!n->isActive) return;
+        eraseNode(n);
+    }
+
     inline void startLoop() {
         linkedListCurrent = linkedListStart;
     }
@@ -80,6 +86,44 @@ public:
 
         linkedListCurrent = linkedListCurrent->next;
         return returnKey;
+    }
+
+    inline Key* getStart() {
+        if (!linkedListStart) return nullptr;
+        return &linkedListStart->key;
+    }
+
+    inline Key* getEnd() {
+        if (!linkedListEnd) return nullptr;
+        return &linkedListEnd->key;
+    }
+
+    inline bool hasAtLeast(int num) {
+        Node* n = linkedListStart;
+        while (num > 0) {
+            if (!n) return false;
+            n = n->next;
+            num--;
+        }
+        return true;
+    }
+
+    inline int getCount() {
+        Node* n = linkedListStart;
+        int count = 0;
+        while (n) {
+            count += 1;
+            n = n->next;
+        }
+        return count;
+    }
+
+    inline Key* rotateKeyOrder() {
+        if (!linkedListStart) return nullptr;
+        if (!linkedListStart->next) return &linkedListStart->key;
+        int index = linkedListStart->key.note;
+        eraseNode(linkedListStart);
+        return getKey(index);
     }
 };
 
