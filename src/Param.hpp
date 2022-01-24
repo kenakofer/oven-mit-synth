@@ -28,11 +28,13 @@ enum Param
     P_WAVEFORM_2 = 19,
     P_LEVEL_2    = 20,
     P_PITCH_2    = 21,
-    P_INSTANCE   = 22,
+    P_VOICE_MODE = 22,
+    P_PORTAMENTO = 23,
+    P_INSTANCE   = 24,
 };
 
-static const int P_NUM_CONTROLS = 22; // The P_INSTANCE param is only used in unity's communication
-static const int P_NUM_UNITY = 23;
+static const int P_NUM_CONTROLS = 24; // The P_INSTANCE param is only used in unity's communication
+static const int P_NUM_UNITY = 25;
 
 constexpr std::array<std::pair<float, float>, P_NUM_CONTROLS> controlLimit =
 {{
@@ -62,6 +64,8 @@ constexpr std::array<std::pair<float, float>, P_NUM_CONTROLS> controlLimit =
     {0.0f, 4.0f},           // WAVEFORM 2
     {0.0f, 1.0f},           // LEVEL 2
     {-24.0f, 24.0f},        // PITCH 2
+    {0.0f, 4.0f},           // VOICE MODE
+    {0.0f, 1.0f},           // PORTAMENTO
 }};
 
 #endif

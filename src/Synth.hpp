@@ -22,6 +22,8 @@ private:
     double rate;
     double position;
     KeyMap keys;
+    Key monoKey;
+    Key* monoKeyTarget;
     Controls controls;
 
 public:

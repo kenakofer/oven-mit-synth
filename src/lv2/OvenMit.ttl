@@ -273,4 +273,28 @@
             lv2:default -12.0 ;
             lv2:minimum -24.0 ;
             lv2:maximum 24.0 ;
+        ] ,
+        [
+            a lv2:InputPort , lv2:ControlPort ;
+            lv2:index 24 ;
+            lv2:symbol "voice_mode" ;
+            lv2:name "Voice Mode" ;
+            lv2:portProperty lv2:integer , lv2:enumeration ;
+            lv2:scalePoint [ rdfs:label "Polyphony" ; rdf:value 0 ] ;
+            lv2:scalePoint [ rdfs:label "Mono (porta, re-attack)" ; rdf:value 1 ] ;
+            lv2:scalePoint [ rdfs:label "Mono (porta, legato)" ; rdf:value 2 ] ;
+            lv2:scalePoint [ rdfs:label "Mono (auto porta, re-attack)" ; rdf:value 3 ] ;
+            lv2:scalePoint [ rdfs:label "Mono (auto porta, legato)" ; rdf:value 4 ] ;
+            lv2:default 0 ;
+            lv2:minimum 0 ;
+            lv2:maximum 4 ;
+        ] ,
+        [
+            a lv2:InputPort , lv2:ControlPort ;
+            lv2:index 25 ;
+            lv2:symbol "portamento" ;
+            lv2:name "Portamento" ;
+            lv2:default 0.0 ;
+            lv2:minimum 0.0 ;
+            lv2:maximum 1.0 ;
         ] .

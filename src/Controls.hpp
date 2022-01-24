@@ -28,6 +28,14 @@ enum FilterTypes
     FILTER_LOWPASS,
     FILTER_HIGHPASS
 };
+enum VoiceModes
+{
+    VOICE_POLY,
+    VOICE_PORTA,
+    VOICE_PORTA_LEGATO,
+    VOICE_AUTO_PORTA,
+    VOICE_AUTO_PORTA_LEGATO
+};
 
 class Controls {
     private:
