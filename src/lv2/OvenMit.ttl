@@ -37,7 +37,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 2 ;
             lv2:symbol "env_mode_1" ;
-            lv2:name "Envelope 1 Mode" ;
+            lv2:name "01 Env 1 Mode    ( Level1,  Pitch1,  Cutoff1,  Level2, Pitch2 )                                                           " ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
             lv2:scalePoint [ rdfs:label "Level 1" ; rdf:value 0 ] ;
             lv2:scalePoint [ rdfs:label "Pitch 1" ; rdf:value 1 ] ;
@@ -52,7 +52,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 3 ;
             lv2:symbol "attack" ;
-            lv2:name "Attack 1" ;
+            lv2:name "02 Attack 1" ;
             lv2:default 0.001 ;
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
@@ -62,7 +62,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 4 ;
             lv2:symbol "decay" ;
-            lv2:name "Decay 1" ;
+            lv2:name "03 Decay 1" ;
             lv2:default 0.1 ;
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
@@ -72,7 +72,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 5 ;
             lv2:symbol "sustain" ;
-            lv2:name "Sustain 1" ;
+            lv2:name "04 Sustain 1" ;
             lv2:default 0.5 ;
             lv2:minimum 0.0 ;
             lv2:maximum 1.0 ;
@@ -81,7 +81,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 6 ;
             lv2:symbol "release" ;
-            lv2:name "Release 1" ;
+            lv2:name "05 Release 1" ;
             lv2:default 0.1 ;
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
@@ -91,7 +91,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 7 ;
             lv2:symbol "waveform" ;
-            lv2:name "Waveform 1" ;
+            lv2:name "06 Waveform 1   ( Sine,  Triangle,  Square,  Saw,  Noise )" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
             lv2:scalePoint [ rdfs:label "Sine" ; rdf:value 0 ] ;
             lv2:scalePoint [ rdfs:label "Triangle" ; rdf:value 1 ] ;
@@ -106,7 +106,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 8 ;
             lv2:symbol "level" ;
-            lv2:name "Level 1" ;
+            lv2:name "07 Level 1" ;
             lv2:default .1 ;
             lv2:minimum 0.0 ;
             lv2:maximum 1.0 ;
@@ -115,7 +115,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 9 ;
             lv2:symbol "pitch1" ;
-            lv2:name "Pitch 1" ;
+            lv2:name "08 Pitch 1" ;
             lv2:default 0.0 ;
             lv2:minimum -24.0 ;
             lv2:maximum 24.0 ;
@@ -124,7 +124,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 10 ;
             lv2:symbol "filter" ;
-            lv2:name "Filter 1" ;
+            lv2:name "09 Filter 1 ( Lopass, Hipass )" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
             lv2:scalePoint [ rdfs:label "Low Pass" ; rdf:value 0 ] ;
             lv2:scalePoint [ rdfs:label "High Pass" ; rdf:value 1 ] ;
@@ -136,7 +136,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 11 ;
             lv2:symbol "cutoff" ;
-            lv2:name "Cutoff Partial 1" ;
+            lv2:name "10 Cutoff Partial" ;
             lv2:default 20.0 ;
             lv2:minimum 0.0 ;
             lv2:maximum 200.0 ;
@@ -145,7 +145,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 12 ;
             lv2:symbol "res_height" ;
-            lv2:name "Res Height 1" ;
+            lv2:name "11 Res Height" ;
             lv2:default 0.0 ;
             lv2:minimum -1.0 ;
             lv2:maximum 8.0 ;
@@ -154,7 +154,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 13 ;
             lv2:symbol "res_width" ;
-            lv2:name "Res Width 1" ;
+            lv2:name "12 Res Width" ;
             lv2:default 3.0 ;
             lv2:minimum 1.0 ;
             lv2:maximum 30.0 ;
@@ -164,7 +164,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 14 ;
             lv2:symbol "env_mode_2" ;
-            lv2:name "Envelope 2 Mode" ;
+            lv2:name "13 Env2" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
             lv2:scalePoint [ rdfs:label "Level 1" ; rdf:value 0 ] ;
             lv2:scalePoint [ rdfs:label "Pitch 1" ; rdf:value 1 ] ;
@@ -179,7 +179,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 15 ;
             lv2:symbol "env_amount_2" ;
-            lv2:name "Envelope 2 Amount" ;
+            lv2:name "14 Env2 Amt" ;
             lv2:default 3.0 ;
             lv2:minimum -10.0 ;
             lv2:maximum 10.0 ;
@@ -188,7 +188,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 16 ;
             lv2:symbol "attack2" ;
-            lv2:name "Attack 2" ;
+            lv2:name "15 Attk 2" ;
             lv2:default 0.001 ;
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
@@ -198,7 +198,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 17 ;
             lv2:symbol "decay2" ;
-            lv2:name "Decay 2" ;
+            lv2:name "16 Decay 2" ;
             lv2:default 0.1 ;
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
@@ -208,7 +208,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 18 ;
             lv2:symbol "sustain2" ;
-            lv2:name "Sustain 2" ;
+            lv2:name "17 Sus 2" ;
             lv2:default 0.0 ;
             lv2:minimum 0.0 ;
             lv2:maximum 1.0 ;
@@ -217,7 +217,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 19 ;
             lv2:symbol "release2" ;
-            lv2:name "Release 2" ;
+            lv2:name "18 Release 2" ;
             lv2:default 0.1 ;
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
@@ -227,7 +227,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 20 ;
             lv2:symbol "waveform2mode" ;
-            lv2:name "Osc 2 Mode" ;
+            lv2:name "19 Osc 2 (Add, FM, AM, Cut)" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
             lv2:scalePoint [ rdfs:label "Add" ; rdf:value 0 ] ;
             lv2:scalePoint [ rdfs:label "FM 1" ; rdf:value 1 ] ;
@@ -241,7 +241,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 21 ;
             lv2:symbol "waveform2" ;
-            lv2:name "Waveform 2" ;
+            lv2:name "20 Wave" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
             lv2:scalePoint [ rdfs:label "Sine" ; rdf:value 0 ] ;
             lv2:scalePoint [ rdfs:label "Triangle" ; rdf:value 1 ] ;
@@ -256,7 +256,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 22 ;
             lv2:symbol "level2" ;
-            lv2:name "Level 2" ;
+            lv2:name "21 Level" ;
             lv2:default .1 ;
             lv2:minimum 0.0 ;
             lv2:maximum 1.0 ;
@@ -265,7 +265,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 23 ;
             lv2:symbol "pitch2" ;
-            lv2:name "Pitch 2" ;
+            lv2:name "22 Pitch" ;
             lv2:default -12.0 ;
             lv2:minimum -48.0 ;
             lv2:maximum 24.0 ;
@@ -274,7 +274,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 24 ;
             lv2:symbol "keytrack2" ;
-            lv2:name "Keytrack 2" ;
+            lv2:name "23 Keytrack" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
             lv2:scalePoint [ rdfs:label "Off" ; rdf:value 0 ] ;
             lv2:scalePoint [ rdfs:label "On" ; rdf:value 1 ] ;
@@ -286,7 +286,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 25 ;
             lv2:symbol "voice_mode" ;
-            lv2:name "Voice Mode" ;
+            lv2:name "24 Voice Mode ( Poly,  autoporta,  porta )" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
             lv2:scalePoint [ rdfs:label "Polyphony" ; rdf:value 0 ] ;
             lv2:scalePoint [ rdfs:label "Mono (auto porta)" ; rdf:value 1 ] ;
@@ -299,7 +299,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 26 ;
             lv2:symbol "portamento" ;
-            lv2:name "Portamento" ;
+            lv2:name "25 Port" ;
             lv2:default 1 ;
             lv2:minimum 1 ;
             lv2:maximum 100 ;
@@ -308,7 +308,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 27 ;
             lv2:symbol "legato" ;
-            lv2:name "Legato" ;
+            lv2:name "26 Legato" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
             lv2:scalePoint [ rdfs:label "Legato Off" ; rdf:value 0 ] ;
             lv2:scalePoint [ rdfs:label "Legato On" ; rdf:value 1 ] ;
