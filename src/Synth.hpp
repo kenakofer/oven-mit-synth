@@ -156,12 +156,18 @@ public:
     inline void stopAllNotes() {
         keys.startLoop();
         Key* k;
-        while (k = keys.getNext()) k->release();
+        while (k = keys.getNext()) {
+            releaseNote(k->note, 127); // This should also cover the monoKey scenario
+        }
     }
 
     inline void stopAllSounds() {
         keys.startLoop();
         Key* k;
-        while (k = keys.getNext()) k->mute();
+        while (k = keys.getNext()) {
+            releaseNote(k->note, 127); //Same as stopAllNotes, we'll just mute afterward
+            k->mute();
+        }
+        monoKey.mute();
     }
 };
