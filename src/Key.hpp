@@ -37,7 +37,7 @@ private:
 public:
     Key ();
     Key (const double rt);
-    void press (const uint8_t nt, const uint8_t vel, Controls *c);
+    void press (const uint8_t nt, const uint8_t vel, Controls *c, bool legato);
     void release ();
     void release (const uint8_t nt, const uint8_t vel);
     void off ();
@@ -76,15 +76,11 @@ inline Key::Key (const double rt) :
 
 }
 
-inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c)
+inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool reattack=true)
 {
-
-    controls = c;
-    start_level_1 = adsr(1);
-    start_level_2 = adsr(2);
+    status = KEY_PRESSED;
     note = nt;
-    velocity = vel;
-    portamento_factor = 1.0 + .001 / (*controls).get(P_PORTAMENTO);
+    controls = c;
 
     target_freq = pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0;
     target_freq2 = pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0;
@@ -93,11 +89,18 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c)
         // no portamento, just set to the target freq
         freq = target_freq;
         freq2 = target_freq2;
+    } else {
+        portamento_factor = 1.0 + .001 / (*controls).get(P_PORTAMENTO);
     }
 
-    time = 0.0;
-    status = KEY_PRESSED;
-    // std::cout << "Starting note with freq: " << freq << std::endl;
+    // With portamento, we sometimes don't reattack the note, meaning the key's
+    // old envelope and veloctiy shouldn't be overwritten, only the pitches
+    if (reattack) {
+        time = 0.0;
+        start_level_1 = adsr(1);
+        start_level_2 = adsr(2);
+        velocity = vel;
+    }
 }
 
 inline void Key::release ()

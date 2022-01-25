@@ -51,7 +51,7 @@ public:
                         keys.erasePrevious();
                     }
                 }
-            } else if (controls.get(P_VOICE_MODE) == VOICE_PORTA) {
+            } else {
                 if (monoKey.isOn()) {
                     audio_out_ptr[i] += monoKey.get();
                     monoKey.proceed();
@@ -71,10 +71,15 @@ public:
             &controls
         );
         if (controls.get(P_VOICE_MODE) != VOICE_POLY) {
+            bool reattack =
+                (!keys.hasAtLeast(2)) ||
+                (controls.get(P_VOICE_MODE) == VOICE_AUTO_PORTA) ||
+                (controls.get(P_VOICE_MODE) == VOICE_PORTA);
             monoKey.press(
                 note,
                 velocity,
-                &controls
+                &controls,
+                reattack
             );
         }
     }
@@ -102,10 +107,12 @@ public:
             if (monoKey.note == note) {
                 if (keys.hasAtLeast(1)) {
                     // Immediately make monoKey press the longest waiting key still held down
+                    const bool reattack = (controls.get(P_VOICE_MODE) == VOICE_AUTO_PORTA) || (controls.get(P_VOICE_MODE) == VOICE_PORTA);
                     monoKey.press(
                         keys.rotateKeyOrder()->note, // Play the held note we haven't played in the longest
                         monoKey.velocity,
-                        &controls
+                        &controls,
+                        reattack
                     );
                 } else {
                     // This is the only note. Do a normal long release.
