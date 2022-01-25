@@ -8,6 +8,8 @@ namespace OvenMit
     const int MAX_KEYS = 1;
     const int MAX_INSTANCES = (int)PARAM_LIMIT[P_UNITY_INSTANCE].second+1;
 
+    static long currentSample = 0;
+
     struct EffectData
     {
         float parameters[P_NUM_UNITY];
@@ -65,14 +67,18 @@ namespace OvenMit
 
     UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK ProcessCallback(UnityAudioEffectState* state, float* inbuffer, float* outbuffer, unsigned int length, int inchannels, int outchannels)
     {
-        std::cout << "ProcessCallback..." << std::endl;
+        // std::cout << "ProcessCallback..." << std::endl;
+
+        // Keep time up to date
+        currentSample += length;
+
         EffectData* data = state->GetEffectData<EffectData>();
         OvenMitInstance* instance = GetOvenMitInstance((int)data->parameters[P_UNITY_INSTANCE]);
 
         // The synth does all the heavy lifting, see Synth.hpp
         instance->synth.outputSamples(outbuffer, 0, length, outchannels);
 
-        std::cout << "...finished" << std::endl;
+        // std::cout << "...finished" << std::endl;
         return UNITY_AUDIODSP_OK;
     }
 
@@ -126,6 +132,12 @@ namespace OvenMit
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_StopAllSounds(int instance_index) {
         std::cout << "OvenMit_StopAllSounds..." << std::endl;
         GetOvenMitInstance(instance_index)->synth.stopAllSounds();
+        std::cout << "   ...finished." << std::endl;
+    }
+
+    extern "C" UNITY_AUDIODSP_EXPORT_API long OvenMit_GetTimeInSamples() {
+        std::cout << "OvenMit_GetTimeInSamples..." << std::endl;
+        return currentSample;
         std::cout << "   ...finished." << std::endl;
     }
 
