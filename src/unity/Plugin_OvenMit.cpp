@@ -105,6 +105,30 @@ namespace OvenMit
         std::cout << "   ...finished." << std::endl;
     }
 
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_StartNote(int instance_index, int midi_note, int velocity) {
+        std::cout << "OvenMit_StartNote..." << std::endl;
+        GetOvenMitInstance(instance_index)->synth.startNote(midi_note, velocity);
+        std::cout << "   ...finished." << std::endl;
+    }
+
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_ReleaseNote(int instance_index, int midi_note) {
+        std::cout << "OvenMit_ReleaseNote..." << std::endl;
+        GetOvenMitInstance(instance_index)->synth.releaseNote(midi_note, 127);
+        std::cout << "   ...finished." << std::endl;
+    }
+
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_StopAllNotes(int instance_index) {
+        std::cout << "OvenMit_StopAllNotes..." << std::endl;
+        GetOvenMitInstance(instance_index)->synth.stopAllNotes();
+        std::cout << "   ...finished." << std::endl;
+    }
+
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_StopAllSounds(int instance_index) {
+        std::cout << "OvenMit_StopAllSounds..." << std::endl;
+        GetOvenMitInstance(instance_index)->synth.stopAllSounds();
+        std::cout << "   ...finished." << std::endl;
+    }
+
     ////////////////////////////////////////////
     /* Boilerplate copied from Unity examples */
     ////////////////////////////////////////////
