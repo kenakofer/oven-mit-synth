@@ -15,11 +15,12 @@
 #include "Key.hpp"
 #include "KeyMap.hpp"
 
+static double rate = 44100;
+
 /* class definiton */
 class Synth
 {
 private:
-    double rate;
     double position;
     KeyMap keys;
     Key monoKey;
@@ -27,8 +28,11 @@ private:
     Controls controls;
 
 public:
+    Synth () :
+        Synth (rate)
+    {
+    }
     Synth (const double sample_rate) :
-        rate (sample_rate),
         position (0.0),
         keys ()
     {

@@ -61,7 +61,7 @@ class Controls {
             /* copy and validate control port values */
             bool updated = false;
             if (value != control[index]) {
-                control[index] = limit<float> (value, controlLimit[index].first, controlLimit[index].second);
+                control[index] = limit<float> (value, PARAM_LIMIT[index].first, PARAM_LIMIT[index].second);
             }
         }
         inline float get(Param index) {
