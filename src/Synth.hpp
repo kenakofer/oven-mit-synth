@@ -52,13 +52,9 @@ public:
                     }
                 }
             } else if (controls.get(P_VOICE_MODE) == VOICE_PORTA) {
-                if (keys.hasAtLeast(1)) {
-                    if (monoKey.isOn()) {
-                        audio_out_ptr[i] += monoKey.get();
-                        monoKey.proceed();
-                    } else {
-                        keys.eraseIndex(monoKey.note);
-                    }
+                if (monoKey.isOn()) {
+                    audio_out_ptr[i] += monoKey.get();
+                    monoKey.proceed();
                 }
             }
         }
@@ -90,24 +86,31 @@ public:
             velocity
         );
         if (controls.get(P_VOICE_MODE) != VOICE_POLY) {
+            // Here in mono mode, the `keys` map is basically just used as a
+            // convenient way to see which piano keys are down. Meanwhile, the
+            // monoKey is the only actual key that runs its logic and generates
+            // sound.
+
+            // This is in contrast to POLY mode, where `keys` keeps track of
+            // notes that are still making sound.
+
+            // That's why we're erasing the note index here. We want to make
+            // sure we don't pivot back to this note after releasing some later
+            // note
+            keys.eraseIndex(note);
+
             if (monoKey.note == note) {
-                if (keys.hasAtLeast(2)) {
-                    // Immediately erase the released key and press the next
-                    keys.eraseIndex(note);
+                if (keys.hasAtLeast(1)) {
+                    // Immediately make monoKey press the longest waiting key still held down
                     monoKey.press(
                         keys.rotateKeyOrder()->note, // Play the held note we haven't played in the longest
                         monoKey.velocity,
                         &controls
                     );
                 } else {
-                    // This is the only note. Do a normal release.
+                    // This is the only note. Do a normal long release.
                     monoKey.release();
                 }
-            } else {
-                // Since we weren't playing this note, immediately erase the
-                // released key so we don't accidently pivot to it later. No
-                // audible change happens here.
-                keys.eraseIndex(note);
             }
         }
     }
