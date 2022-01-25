@@ -35,17 +35,27 @@ public:
         controls = Controls(sample_rate);
     }
 
-    inline void outputSamples(float* audio_out_ptr, const uint32_t start, const uint32_t end)
+    inline void outputSamples(float* audio_out_ptr, const uint32_t start, const uint32_t end, const int outchannels=1)
     {
         for (uint32_t i = start; i < end; ++i)
         {
-            audio_out_ptr[i] = 0.0f;
+            // Reset the outs to 0 since it may still have data from last time
+            for (int j=0; j<outchannels; j++) {
+                audio_out_ptr[i*outchannels+j] = 0.0f;
+            }
+
             if (controls.get(P_VOICE_MODE) == VOICE_POLY) {
+
                 keys.startLoop();
                 Key* k;
                 while (k = keys.getNext()) {
                     if (k->isOn()) {
-                        audio_out_ptr[i] += k->get();
+                        const float outvalue = k->get();
+                        // Add to pointer
+                        for (int j=0; j<outchannels; j++) {
+                            audio_out_ptr[i*outchannels+j] += outvalue;
+                        }
+                        // Proceed every key that's ON
                         k->proceed();
                     } else {
                         keys.erasePrevious();
@@ -53,7 +63,12 @@ public:
                 }
             } else {
                 if (monoKey.isOn()) {
-                    audio_out_ptr[i] += monoKey.get();
+                    const float outvalue = monoKey.get();
+                    // Output to pointer
+                    for (int j=0; j<outchannels; j++) {
+                        audio_out_ptr[i*outchannels+j] = outvalue;
+                    }
+                    // Proceed just the one key
                     monoKey.proceed();
                 }
             }
