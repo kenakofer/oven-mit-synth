@@ -71,15 +71,24 @@ public:
             &controls
         );
         if (controls.get(P_VOICE_MODE) != VOICE_POLY) {
-            bool reattack =
-                (!keys.hasAtLeast(2)) ||
+            const bool single_key = ! keys.hasAtLeast(2);
+            const bool reattack =
+                single_key ||
                 (controls.get(P_VOICE_MODE) == VOICE_AUTO_PORTA) ||
                 (controls.get(P_VOICE_MODE) == VOICE_PORTA);
+
+            const bool porta = (controls.get(P_PORTAMENTO) != 1.0f) && (
+                (controls.get(P_VOICE_MODE) == VOICE_PORTA) ||
+                (controls.get(P_VOICE_MODE) == VOICE_PORTA_LEGATO) ||
+                (!single_key)
+            );
+
             monoKey.press(
                 note,
                 velocity,
                 &controls,
-                reattack
+                reattack,
+                !porta
             );
         }
     }
@@ -108,11 +117,14 @@ public:
                 if (keys.hasAtLeast(1)) {
                     // Immediately make monoKey press the longest waiting key still held down
                     const bool reattack = (controls.get(P_VOICE_MODE) == VOICE_AUTO_PORTA) || (controls.get(P_VOICE_MODE) == VOICE_PORTA);
+                    const bool refreq = (controls.get(P_PORTAMENTO) == 1.0f);
+                    // (controls.get(P_VOICE_MODE) == VOICE_AUTO_PORTA) || (controls.get(P_VOICE_MODE) == VOICE_AUTO_PORTA_LEGATO);
                     monoKey.press(
                         keys.rotateKeyOrder()->note, // Play the held note we haven't played in the longest
                         monoKey.velocity,
                         &controls,
-                        reattack
+                        reattack,
+                        refreq
                     );
                 } else {
                     // This is the only note. Do a normal long release.

@@ -37,7 +37,7 @@ private:
 public:
     Key ();
     Key (const double rt);
-    void press (const uint8_t nt, const uint8_t vel, Controls *c, bool legato);
+    void press (const uint8_t nt, const uint8_t vel, Controls *c, bool legato, bool refreq);
     void release ();
     void release (const uint8_t nt, const uint8_t vel);
     void off ();
@@ -76,7 +76,7 @@ inline Key::Key (const double rt) :
 
 }
 
-inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool reattack=true)
+inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool reattack=true, bool refreq=true)
 {
     status = KEY_PRESSED;
     note = nt;
@@ -85,7 +85,9 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool r
     target_freq = pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0;
     target_freq2 = pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0;
 
-    if ((*controls).get(P_VOICE_MODE) == VOICE_POLY || (*controls).get(P_PORTAMENTO) == 1.0f) {
+    // In monophonic mode, we sometimes don't instantly go to the right
+    // frequence, instead sliding to it (portmento)
+    if (refreq) {
         // no portamento, just set to the target freq
         freq = target_freq;
         freq2 = target_freq2;
@@ -93,7 +95,7 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool r
         portamento_factor = 1.0 + .001 / (*controls).get(P_PORTAMENTO);
     }
 
-    // With portamento, we sometimes don't reattack the note, meaning the key's
+    // In monophonic mode, we sometimes don't reattack the note, meaning the key's
     // old envelope and veloctiy shouldn't be overwritten, only the pitches
     if (reattack) {
         time = 0.0;
