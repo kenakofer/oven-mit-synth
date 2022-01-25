@@ -65,7 +65,7 @@ constexpr std::array<std::pair<float, float>, P_NUM_CONTROLS> controlLimit =
     {0.0f, 1.0f},           // LEVEL 2
     {-24.0f, 24.0f},        // PITCH 2
     {0.0f, 4.0f},           // VOICE MODE
-    {0.0f, 1.0f},           // PORTAMENTO
+    {1.00f, 100.0f},        // PORTAMENTO
 }};
 
 #endif

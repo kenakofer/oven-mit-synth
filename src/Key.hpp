@@ -27,8 +27,11 @@ private:
     float start_level_1;
     float start_level_2;
     double freq;
+    double target_freq;
     double freq2;
+    double target_freq2;
     double time;
+    double portamento_factor;
     Controls* controls;
 
 public:
@@ -81,8 +84,17 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c)
     start_level_2 = adsr(2);
     note = nt;
     velocity = vel;
-    freq = pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0;
-    freq2 = pow (2.0, (static_cast<double> (note) - 69.0 + controls->get(P_PITCH_2)) / 12.0) * 440.0;
+    portamento_factor = 1.0 + .001 / (*controls).get(P_PORTAMENTO);
+
+    target_freq = pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0;
+    target_freq2 = pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0;
+
+    if ((*controls).get(P_VOICE_MODE) == VOICE_POLY || (*controls).get(P_PORTAMENTO) == 1.0f) {
+        // no portamento, just set to the target freq
+        freq = target_freq;
+        freq2 = target_freq2;
+    }
+
     time = 0.0;
     status = KEY_PRESSED;
     // std::cout << "Starting note with freq: " << freq << std::endl;
@@ -238,6 +250,28 @@ inline float Key::get ()
 inline void Key::proceed ()
 {
     time += 1.0 / rate;
+
+    // If portamento, the freq needs to slide toward target_freq. The P_PORTAMENTO setting is slightly less than 1, so dividing makes freq bigger.
+    if (freq != target_freq) {
+        if (freq < target_freq) {
+            freq *= portamento_factor;
+            if (freq > target_freq) freq = target_freq;
+        }
+        if (freq > target_freq) {
+            freq /= portamento_factor;
+            if (freq < target_freq) freq = target_freq;
+        }
+    }
+    if (freq2 != target_freq2) {
+        if (freq2 < target_freq2) {
+            freq2 *= portamento_factor;
+            if (freq2 > target_freq2) freq2 = target_freq2;
+        }
+        if (freq2 > target_freq2) {
+            freq2 /= portamento_factor;
+            if (freq2 < target_freq2) freq2 = target_freq2;
+        }
+    }
 
     // Find oscillator 1's freq:
     float modfreq = freq;
