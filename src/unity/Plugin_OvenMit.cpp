@@ -11,13 +11,23 @@ namespace OvenMit
     const int MAX_KEYS = 1;
     const int MAX_INSTANCES = (int)PARAM_LIMIT[P_UNITY_INSTANCE].second+1;
 
+    // This parameter is just for the instance of the AudioEffect that's
+    // attached to an audio bus in the Unity Editor, which shouldn't be confused
+    // with any of the native synth instances itself. The AudioEffect is just a sink
+    // for audio, which can receive from one of the synthesizers.
+    enum UnityParameters {
+        INSTANCE_INDEX, // Which native instance of OvenMit should this audio bus receive audio data from?
+        UNITY_PARAM_NUM
+    };
+
     struct EffectData
     {
-        float parameters[P_NUM_UNITY];
+        float parameters[UNITY_PARAM_NUM];
     };
 
     struct OvenMitInstance
     {
+        // TODO are these recreated at runtime, or when Unity loads this file?
         Synth synth;
 
         // TODO we should use a better data structure that's indexed by both time and
@@ -36,6 +46,10 @@ namespace OvenMit
         {
             initialized[index] = true;
             instance[index].synth = Synth(44100);
+            // Control values are all 0 to start (no sound except a small click on note start), so set the defaults
+            for (int p=0; p<P_NUM_CONTROLS; p++) {
+                instance[index].synth.setControl(p, PARAM_DEFAULT[p]);
+            }
         }
         std::cout << "    ...finished" << std::endl;
         return &instance[index];
@@ -44,37 +58,21 @@ namespace OvenMit
     int InternalRegisterEffectDefinition(UnityAudioEffectDefinition& definition)
     {
         std::cout << "OvenMit: InternalRegisterEffectDefinition..." << std::endl;
-        definition.paramdefs = new UnityAudioParameterDefinition[P_NUM_UNITY];
-        for (int p = 0; p < P_NUM_UNITY; p++) {
-            std::cout << "  ...Registering parameter " << p+1 << " out of " << P_NUM_UNITY << std::endl;
-            std::cout << "   ..." << PARAM_NAME[p] << std::endl;
-            std::cout << "   ..." << PARAM_LIMIT[p].first << std::endl;
-            std::cout << "   ..." << PARAM_LIMIT[p].second << std::endl;
-            std::cout << "   ..." << PARAM_DEFAULT[p] << std::endl;
-            std::cout << "   ..." << p << std::endl;
-            RegisterParameter(
-                definition,
-                PARAM_NAME[p],              // Name
-                "",                         // Unit
-                PARAM_LIMIT[p].first,       // Min
-                PARAM_LIMIT[p].second,      // Max
-                PARAM_DEFAULT[p],           // Default
-                1.0f,                       // Scale?
-                1.0f,                       // Another scale?
-                p,                          // index
-                ""                          // description      TODO
-            );
-        }
-
+        definition.paramdefs = new UnityAudioParameterDefinition[UNITY_PARAM_NUM];
+        RegisterParameter( definition, "Synth Instance", "", 0, MAX_INSTANCES-1, 0, 1.0f, 1.0f, 0,
+            "Which native instance of OvenMit should this audio bus receive audio data from?"
+        );
         std::cout << "...finished" << std::endl;
-        return P_NUM_UNITY;
+        return UNITY_PARAM_NUM;
     }
 
     UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK ProcessCallback(UnityAudioEffectState* state, float* inbuffer, float* outbuffer, unsigned int length, int inchannels, int outchannels)
     {
+        // TODO find a way for this method to work when two audioeffects share the same synth index
+
         std::cout << "ProcessCallback..." << std::endl;
         EffectData* data = state->GetEffectData<EffectData>();
-        OvenMitInstance* instance = GetOvenMitInstance((int)data->parameters[P_UNITY_INSTANCE]);
+        OvenMitInstance* instance = GetOvenMitInstance(data->parameters[INSTANCE_INDEX]);
         Synth* synth = &instance->synth;
 
         UInt64 tick = state->currdsptick; // Global time in samples plus frames within this buffer
@@ -121,22 +119,25 @@ namespace OvenMit
         return UNITY_AUDIODSP_OK;
     }
 
+    /* I think the initial state is in the default state, NOT in the state of the
+     * Unity GUI, so doing any operations or instantiating a particular
+     * OvenMitInstance doesn't make sense in this method. Afterward it seems
+     * Unity calls SetFloatParameterCallback for every parameter anyways, which
+     * will create the instance.
+     *
+     *
+     * This code is loaded into memory once when Unity loads, but CreateCallback
+     * is called for every OvenMitSynth on every replay, so the static instance
+     * counting doesn't work.
+     */
     UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK CreateCallback(UnityAudioEffectState* state)
     {
         std::cout << "CreateCallback..." << std::endl;
-
         EffectData* effectdata = new EffectData;
         memset(effectdata, 0, sizeof(EffectData));
-
-        // std::cout << "  Creating an instance" << std::endl;
-        for (int n = 0; n < MAX_KEYS; n++) {
-            int instance_index = effectdata->parameters[P_UNITY_INSTANCE];
-            OvenMitInstance* instance = GetOvenMitInstance(instance_index);
-            for (int k=0; k<P_NUM_UNITY-1; k++) {
-                instance->synth.setControl(k, effectdata->parameters[k]);
-            }
-        }
         state->effectdata = effectdata;
+
+        // The instance index is assigned based on the next available based on instance_count.
         InitParametersFromDefinitions(InternalRegisterEffectDefinition, effectdata->parameters);
         std::cout << "  ...finished" << std::endl;
         return UNITY_AUDIODSP_OK;
@@ -200,12 +201,12 @@ namespace OvenMit
 
     UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK SetFloatParameterCallback(UnityAudioEffectState* state, int index, float value)
     {
-        std::cout << "SetFloatParameterCallback... " << index << " to " << value << std::endl;
         EffectData* data = state->GetEffectData<EffectData>();
-        if (index >= P_NUM_UNITY)
+        OvenMitInstance* instance = GetOvenMitInstance(data->parameters[INSTANCE_INDEX]);;
+        std::cout << "SetFloatParameterCallback on instance... " << (int)data->parameters[P_UNITY_INSTANCE] << " param index " << index << " to " << value << std::endl;
+        if (index >= UNITY_PARAM_NUM)
             return UNITY_AUDIODSP_ERR_UNSUPPORTED;
         data->parameters[index] = value;
-        OvenMitInstance* instance = GetOvenMitInstance((int)data->parameters[P_UNITY_INSTANCE]);
         instance->synth.setControl(index, value);
         std::cout << "   ...finished." << std::endl;
         return UNITY_AUDIODSP_OK;
@@ -215,7 +216,7 @@ namespace OvenMit
     {
         std::cout << "Other OvenMit function..." << std::endl;
         EffectData* data = state->GetEffectData<EffectData>();
-        if (index >= P_NUM_UNITY)
+        if (index >= UNITY_PARAM_NUM)
             return UNITY_AUDIODSP_ERR_UNSUPPORTED;
         if (value != NULL)
             *value = data->parameters[index];
