@@ -1,14 +1,15 @@
+#include <iostream>
+#include <limits.h>
+
 #include "AudioPluginUtil.h"
 #include "../Synth.hpp"
 #include "../Param.hpp"
-#include <iostream>
+#include "NoteEventQueue.hpp"
 
 namespace OvenMit
 {
     const int MAX_KEYS = 1;
     const int MAX_INSTANCES = (int)PARAM_LIMIT[P_UNITY_INSTANCE].second+1;
-
-    static long currentSample = 0;
 
     struct EffectData
     {
@@ -18,11 +19,15 @@ namespace OvenMit
     struct OvenMitInstance
     {
         Synth synth;
+
+        // TODO we should use a better data structure that's indexed by both time and
+        // note, (basically a variation of KeyMap with more intelligent insert)
+        std::priority_queue<NoteEvent, std::vector<NoteEvent>, PrioritizeEarlierTime> note_event_queue;
     };
 
     inline OvenMitInstance* GetOvenMitInstance(int index)
     {
-        std::cout << "GetOvenMitInstance..." << std::endl;
+        std::cout << "GetOvenMitInstance with index..." << index << std::endl;
         static bool initialized[MAX_INSTANCES] = { false };
         static OvenMitInstance instance[MAX_INSTANCES];
         if (index < 0 || index >= MAX_INSTANCES)
@@ -67,24 +72,59 @@ namespace OvenMit
 
     UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK ProcessCallback(UnityAudioEffectState* state, float* inbuffer, float* outbuffer, unsigned int length, int inchannels, int outchannels)
     {
-        // std::cout << "ProcessCallback..." << std::endl;
-
-        // Keep time up to date
-        currentSample += length;
-
+        std::cout << "ProcessCallback..." << std::endl;
         EffectData* data = state->GetEffectData<EffectData>();
         OvenMitInstance* instance = GetOvenMitInstance((int)data->parameters[P_UNITY_INSTANCE]);
+        Synth* synth = &instance->synth;
 
-        // The synth does all the heavy lifting, see Synth.hpp
-        instance->synth.outputSamples(outbuffer, 0, length, outchannels);
+        UInt64 tick = state->currdsptick; // Global time in samples plus frames within this buffer
+        std::cout << "  ...starting buffer at tick: " << tick << std::endl;
+        int frame = 0;                    // Time within this buffer, range is [0, length]
 
-        // std::cout << "...finished" << std::endl;
+        while (frame < length) {
+            // Process any events that are ready
+            long next_event_at = instance->note_event_queue.empty() ? LONG_MAX : instance->note_event_queue.top().wait_for_sample;
+            while (tick >= next_event_at) {
+                const NoteEvent top = instance->note_event_queue.top();
+                std::cout << " ...Note Event with wait_for_sample: " << top.wait_for_sample << std::endl;
+                switch (top.event_type) {
+                    case NoteStart:
+                        std::cout << " ...Start scheduled note: " << top.note << std::endl;
+                        synth->startNote(top.note, top.velocity);
+                        break;
+                    case NoteRelease:
+                        std::cout << " ...Release scheduled note: " << top.note << std::endl;
+                        synth->releaseNote(top.note, top.velocity);
+                        break;
+                }
+
+                instance->note_event_queue.pop();
+                std::cout << "  ...New size of event queue: " << instance->note_event_queue.size() << std::endl;
+                // If empty, place the next_event_at to basically infinity
+                next_event_at = instance->note_event_queue.empty() ? LONG_MAX : instance->note_event_queue.top().wait_for_sample;
+            }
+
+            // Step forward to the end of the frame, or to the next event, whichever is sooner.
+            int framesToNext = length - frame;
+            if (framesToNext > next_event_at - tick)
+                framesToNext = next_event_at - tick;
+
+            // Synthesizer does MAGIC to compute samples
+            std::cout << "...outputSamples from " << frame << " to " << frame+framesToNext << std::endl;
+            synth->outputSamples(outbuffer, frame, frame+framesToNext, outchannels);
+
+            frame += framesToNext;
+            tick += framesToNext;
+        }
+
+        std::cout << "...finished" << std::endl;
         return UNITY_AUDIODSP_OK;
     }
 
     UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK CreateCallback(UnityAudioEffectState* state)
     {
         std::cout << "CreateCallback..." << std::endl;
+
         EffectData* effectdata = new EffectData;
         memset(effectdata, 0, sizeof(EffectData));
 
@@ -135,9 +175,13 @@ namespace OvenMit
         std::cout << "   ...finished." << std::endl;
     }
 
-    extern "C" UNITY_AUDIODSP_EXPORT_API long OvenMit_GetTimeInSamples() {
-        std::cout << "OvenMit_GetTimeInSamples..." << std::endl;
-        return currentSample;
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_ScheduleNote(int instance_index, int midiNote, int velocity, long start, long end) {
+        std::cout << "OvenMit_ScheduleNote..." << std::endl;
+        OvenMitInstance* instance = GetOvenMitInstance(instance_index);
+        std::cout << "  ...Push start" << instance_index << " " << midiNote << " " << velocity << " " << start << " " << end << std::endl;
+        instance->note_event_queue.push(NoteEvent(NoteStart, start, instance_index, midiNote, velocity));
+        std::cout << "  ...Push end" << std::endl;
+        instance->note_event_queue.push(NoteEvent(NoteRelease, end, instance_index, midiNote, velocity));
         std::cout << "   ...finished." << std::endl;
     }
 

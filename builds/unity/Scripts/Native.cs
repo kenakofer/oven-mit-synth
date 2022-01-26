@@ -25,5 +25,8 @@ namespace OvenMit
         [DllImport("OvenMit")]
         public static extern long OvenMit_GetTimeInSamples();
 
+        [DllImport("OvenMit")]
+        public static extern void OvenMit_ScheduleNote(int instance, int midiNote, int velocity, long start, long end);
+
     }
 }
