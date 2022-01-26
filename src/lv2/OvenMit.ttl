@@ -56,7 +56,6 @@
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
             units:unit units:s ;
-            lv2:portProperty pprops:logarithmic ;
         ] ,
         [
             a lv2:InputPort , lv2:ControlPort ;
@@ -67,7 +66,6 @@
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
             units:unit units:s ;
-            lv2:portProperty pprops:logarithmic ;
         ] ,
         [
             a lv2:InputPort , lv2:ControlPort ;
@@ -87,7 +85,6 @@
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
             units:unit units:s ;
-            lv2:portProperty pprops:logarithmic ;
         ] ,
         [
             a lv2:InputPort , lv2:ControlPort ;
@@ -194,7 +191,6 @@
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
             units:unit units:s ;
-            lv2:portProperty pprops:logarithmic ;
         ] ,
         [
             a lv2:InputPort , lv2:ControlPort ;
@@ -205,7 +201,6 @@
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
             units:unit units:s ;
-            lv2:portProperty pprops:logarithmic ;
         ] ,
         [
             a lv2:InputPort , lv2:ControlPort ;
@@ -225,7 +220,6 @@
             lv2:minimum 0.001 ;
             lv2:maximum 4.0 ;
             units:unit units:s ;
-            lv2:portProperty pprops:logarithmic ;
         ] ,
         [
             a lv2:InputPort , lv2:ControlPort ;
@@ -297,5 +291,4 @@
             lv2:default 1 ;
             lv2:minimum 1 ;
             lv2:maximum 100 ;
-            lv2:portProperty pprops:logarithmic ;
         ] .
