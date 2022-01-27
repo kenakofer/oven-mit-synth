@@ -229,7 +229,7 @@ inline float Key::synth2()
 {
     float value;
     if (freq2 < 100) {
-        // Aliased wave will sound better on the low notes
+        // Aliased wave will sound better on the low notes maybe?
         value = valueInWaveform(static_cast<Waveform> (controls->get(P_WAVEFORM_2)), position2);
     } else {
         // Dealiased wave: (partials only up to nyquist (22k))
@@ -242,8 +242,9 @@ inline float Key::synth2()
             );
     }
 
-    if (controls->get(P_ENV_MODE_1) == ENV_LEVEL_2) value *= adsr(1);
     if (controls->get(P_ENV_MODE_2) == ENV_LEVEL_2) value *= adsr(2);
+    else if (controls->get(P_ENV_MODE_1) == ENV_LEVEL_2) value *= adsr(1);
+    else if (controls->get(P_WAVEFORM_2_MODE) == OSC_ADD) value *= adsr(1); //Since the second waveform is being added, presumably we want some envelope on it.
 
     value *= controls->get(P_LEVEL_2);
     return value;
@@ -251,7 +252,7 @@ inline float Key::synth2()
 
 inline float Key::get ()
 {
-    float value = synthPartials() * // Synth partials is 0 for some reason!!!
+    float value = synthPartials() *
                     controls->get(P_LEVEL);
 
     if (controls->get(P_ENV_MODE_1) == ENV_LEVEL_1) {
