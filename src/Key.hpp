@@ -7,6 +7,7 @@
 #include <ctime>
 #include <array>
 #include <iostream>
+#include <limits.h>
 
 #include "Waveform.hpp"
 #include "KeyStatus.hpp"
@@ -219,7 +220,20 @@ inline float Key::synthPartials()
 
 inline float Key::synth2()
 {
-    float value = valueInWaveform(static_cast<Waveform> (controls->get(P_WAVEFORM_2)), position2);
+    float value;
+    if (freq2 < 100) {
+        // Aliased wave will sound better on the low notes
+        value = valueInWaveform(static_cast<Waveform> (controls->get(P_WAVEFORM_2)), position2);
+    } else {
+        // Dealiased wave: (partials only up to nyquist (22k))
+        value = lowPassInWave(
+                static_cast<Waveform> (controls->get(P_WAVEFORM_2)),
+                freq2,
+                position2,
+                10000, // Take all the partials!
+                controls->get(P_RES_WIDTH), controls->get(P_RES_HEIGHT)
+            );
+    }
 
     if (controls->get(P_ENV_MODE_1) == ENV_LEVEL_2) value *= adsr(1);
     if (controls->get(P_ENV_MODE_2) == ENV_LEVEL_2) value *= adsr(2);
