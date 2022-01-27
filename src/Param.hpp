@@ -52,7 +52,7 @@ constexpr std::array<std::pair<float, float>, P_NUM_UNITY> PARAM_LIMIT =
     {-24.0f, 24.0f},        // PITCH
 
     {0.0f, 1.0f},           // FILTER
-    {0.0f, 60.0f},          // CUTOFF
+    {0.0f, 200.0f},         // CUTOFF
     {0.0f, 8.0f},           // RES_HEIGHT
     {1.0f, 30.0f},          // RES_WIDTH
 

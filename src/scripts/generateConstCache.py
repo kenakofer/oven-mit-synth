@@ -5,7 +5,7 @@ from sys import argv
 from math import sin, pi
 
 
-CACHE_PARTIALS = 70
+CACHE_PARTIALS = 200
 CACHE_SAMPLES = 1024
 
 TYPE = "constexpr std::array<std::array<const float, CACHE_SAMPLES>, CACHE_PARTIALS>"
