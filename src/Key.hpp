@@ -96,12 +96,12 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool r
         portamento_factor = 1.0 + .001 / (*controls).get(P_PORTAMENTO);
     }
 
-    // In monophonic mode, we sometimes don't reattack the note, meaning the key's
+    // In monophonic mode, we sometimes don't reattack the note (legato), meaning the key's
     // old envelope and veloctiy shouldn't be overwritten, only the pitches
     if (reattack) {
         time = 0.0;
-        start_level_1 = adsr(1); // Can start out with prior amplitide if a release is followed by another press
-        start_level_2 = adsr(2);
+        start_level_1 = 0;
+        start_level_2 = 0;
         velocity = vel;
     }
 }
@@ -313,7 +313,8 @@ inline void Key::proceed ()
 
     if ((status == KEY_RELEASED) &&
             (time >= controls->get(P_RELEASE)) &&
-            (time >= controls->get(P_RELEASE_2))) {
+            (time >= controls->get(P_RELEASE_2) || !(controls->get(P_ENV_MODE_2) == ENV_LEVEL_1  || controls->get(P_ENV_MODE_2) == ENV_LEVEL_2))
+            ) {
         off();
     }
 }
