@@ -28,5 +28,8 @@ namespace OvenMit
         [DllImport("OvenMit")]
         public static extern void OvenMit_ScheduleNote(int instance, int midiNote, int velocity, long start, long end);
 
+        [DllImport("OvenMit")]
+        public static extern void OvenMit_SetSynthParameter(int instance, int parameterIndex, float value);
+
     }
 }

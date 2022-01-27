@@ -27,11 +27,7 @@ namespace OvenMit
             Param.SynthParameters.P_WAVEFORM_2,
             Param.SynthParameters.P_LEVEL_2,
             Param.SynthParameters.P_PITCH_2,
-            Param.SynthParameters.P_VOICE_MODE
-        };
-
-        // When the scale_type is log, LMMS stores those parameters as child elements
-        public static readonly Param.SynthParameters[] LMMS_CHILD_PARAMETERS= {
+            Param.SynthParameters.P_VOICE_MODE,
             Param.SynthParameters.P_ATTACK    ,
             Param.SynthParameters.P_DECAY     ,
             Param.SynthParameters.P_RELEASE   ,
@@ -41,7 +37,12 @@ namespace OvenMit
             Param.SynthParameters.P_PORTAMENTO
         };
 
-        public static void LoadPatchFromFile(string path)
+        // When the scale_type is log, LMMS stores those parameters as child elements.
+        // Currently none, but we'll keep the logic around for now.
+        public static readonly Param.SynthParameters[] LMMS_CHILD_PARAMETERS= {
+        };
+
+        public static void LoadPatchFromFile(int instance_index, string path)
         {
             string fullPath = Application.streamingAssetsPath + "/" + path;
             Debug.Log($"Application.streamingAssetsPath is {Application.streamingAssetsPath}");
@@ -52,11 +53,13 @@ namespace OvenMit
                     string name = Param.PARAMETER_SYMBOLS[(int)param];
                     float value = float.Parse(elem.GetAttribute(name));
                     Debug.Log("Attribute: "+ (int)param + " " + name + " " + value.ToString());
+                    Native.OvenMit_SetSynthParameter(instance_index, (int)param, value);
                 }
                 foreach (Param.SynthParameters param in LMMS_CHILD_PARAMETERS) {
                     string name = Param.PARAMETER_SYMBOLS[(int)param];
                     float value = float.Parse(elem[name].GetAttribute("value"));
                     Debug.Log("Attribute: "+ (int)param + " " + name + " " + value.ToString());
+                    Native.OvenMit_SetSynthParameter(instance_index, (int)param, value);
                 }
             }
         }

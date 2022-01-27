@@ -186,6 +186,11 @@ namespace OvenMit
         std::cout << "   ...finished." << std::endl;
     }
 
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetSynthParameter(int instance_index, int parameter_index, float value) {
+        OvenMitInstance* instance = GetOvenMitInstance(instance_index);
+        instance->synth.setControl(parameter_index, value);
+    }
+
     ////////////////////////////////////////////
     /* Boilerplate copied from Unity examples */
     ////////////////////////////////////////////
@@ -207,7 +212,6 @@ namespace OvenMit
         if (index >= UNITY_PARAM_NUM)
             return UNITY_AUDIODSP_ERR_UNSUPPORTED;
         data->parameters[index] = value;
-        instance->synth.setControl(index, value);
         std::cout << "   ...finished." << std::endl;
         return UNITY_AUDIODSP_OK;
     }
