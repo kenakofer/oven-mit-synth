@@ -50,7 +50,7 @@ inline float valueFromCache(Waveform waveform, float partial_index, float positi
     switch (waveform)
     {
         case WAVEFORM_SINE:     return p1 * CACHE_SINE[bottom_partial][i] + p2 * CACHE_SINE[bottom_partial+1][i];
-        case WAVEFORM_TRIANGLE: return p1 * CACHE_TRIANGLE[bottom_partial][i] + p2 * CACHE_TRIANGLE[bottom_partial+1][i];
+        case WAVEFORM_TRIANGLE: return 3 * (p1 * CACHE_TRIANGLE[bottom_partial][i] + p2 * CACHE_TRIANGLE[bottom_partial+1][i]);
         case WAVEFORM_SQUARE:   return p1 * CACHE_SQUARE[bottom_partial][i] + p2 * CACHE_SQUARE[bottom_partial+1][i];
         case WAVEFORM_SAW:      return p1 * CACHE_SAW[bottom_partial][i] + p2 * CACHE_SAW[bottom_partial+1][i];
         default:                return 0.0f;
