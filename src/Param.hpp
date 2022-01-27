@@ -70,7 +70,7 @@ constexpr std::array<std::pair<float, float>, P_NUM_CONTROLS> PARAM_LIMIT =
     {0.0f, 2.0f},           // VOICE MODE
     {1.00f, 100.0f},        // PORTAMENTO
 
-    {0.00f, 2.0f},          // LEGATO
+    {0.00f, 1.0f},          // LEGATO
 }};
 
 constexpr std::array<float, P_NUM_CONTROLS> PARAM_DEFAULT =

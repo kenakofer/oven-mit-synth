@@ -31,10 +31,13 @@ enum FilterTypes
 enum VoiceModes
 {
     VOICE_POLY,
-    VOICE_PORTA,
-    VOICE_PORTA_LEGATO,
     VOICE_AUTO_PORTA,
-    VOICE_AUTO_PORTA_LEGATO
+    VOICE_PORTA,
+};
+enum LegatoModes
+{
+    LEGATO_OFF,
+    LEGATO_ON, // TODO better name?
 };
 
 class Controls {

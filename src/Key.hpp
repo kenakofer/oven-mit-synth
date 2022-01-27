@@ -38,7 +38,7 @@ private:
 public:
     Key ();
     Key (const double rt);
-    void press (const uint8_t nt, const uint8_t vel, Controls *c, bool legato, bool refreq);
+    void press (const uint8_t nt, const uint8_t vel, Controls *c, bool refreq);
     void release ();
     void release (const uint8_t nt, const uint8_t vel);
     void off ();
@@ -77,9 +77,8 @@ inline Key::Key (const double rt) :
 
 }
 
-inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool reattack=true, bool refreq=true)
+inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool refreq=true)
 {
-    status = KEY_PRESSED;
     note = nt;
     controls = c;
 
@@ -96,14 +95,22 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool r
         portamento_factor = 1.0 + .001 / (*controls).get(P_PORTAMENTO);
     }
 
-    // In monophonic mode, we sometimes don't reattack the note (legato), meaning the key's
+    // We sometimes don't reattack the note (legato), meaning the key's
     // old envelope and veloctiy shouldn't be overwritten, only the pitches
-    if (reattack) {
-        time = 0.0;
+
+    if (controls->get(P_LEGATO) == LEGATO_OFF) {
+        // Full reattack
         start_level_1 = 0;
         start_level_2 = 0;
-        velocity = vel;
+    } else {
+        // Start at the key's prior start_level, then reset time
+        start_level_1 = adsr(1) * velocity / vel;
+        start_level_2 = adsr(2) * velocity / vel;
     }
+
+    time = 0.0;
+    velocity = vel;
+    status = KEY_PRESSED;
 }
 
 inline void Key::release ()
