@@ -33,13 +33,12 @@ enum Param
     P_VOICE_MODE = 22,
     P_PORTAMENTO = 23,
 
-    P_UNITY_INSTANCE   = 24,
+    P_LEGATO = 24,
+
+    P_NUM_CONTROLS = 25
 };
 
-static const int P_NUM_CONTROLS = 24; // The P_UNITY_INSTANCE param is only used in unity's communication
-static const int P_NUM_UNITY = 25;
-
-constexpr std::array<std::pair<float, float>, P_NUM_UNITY> PARAM_LIMIT =
+constexpr std::array<std::pair<float, float>, P_NUM_CONTROLS> PARAM_LIMIT =
 {{
     {0.0f, 3.0f},           // ENV_MODE_1
     {0.001f, 4.0f},         // ATTACK
@@ -68,13 +67,13 @@ constexpr std::array<std::pair<float, float>, P_NUM_UNITY> PARAM_LIMIT =
     {0.0f, 1.0f},           // LEVEL 2
     {-24.0f, 24.0f},        // PITCH 2
 
-    {0.0f, 4.0f},           // VOICE MODE
+    {0.0f, 2.0f},           // VOICE MODE
     {1.00f, 100.0f},        // PORTAMENTO
 
-    {0.00f, 31.0f},        // UNITY INSTANCE NUMBER
+    {0.00f, 2.0f},          // LEGATO
 }};
 
-constexpr std::array<float, P_NUM_UNITY> PARAM_DEFAULT =
+constexpr std::array<float, P_NUM_CONTROLS> PARAM_DEFAULT =
 {
     0,           // ENV_MODE_1
     0.001,         // ATTACK
@@ -106,10 +105,10 @@ constexpr std::array<float, P_NUM_UNITY> PARAM_DEFAULT =
     0,           // VOICE MODE
     1,        // PORTAMENTO
 
-    0,        // INSTANCE NUMBER
+    1,        // LEGATO
 };
 
-const char* PARAM_NAME[P_NUM_UNITY] = {
+const char* PARAM_NAME[P_NUM_CONTROLS] = {
     "EnvMode1",
     "Attack1",
     "Decay1",
@@ -140,7 +139,7 @@ const char* PARAM_NAME[P_NUM_UNITY] = {
     "VoiceMode",
     "Portamento",
 
-    "UnityInstance",
+    "Legato",
 };
 
 #endif

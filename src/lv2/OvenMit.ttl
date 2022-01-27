@@ -275,13 +275,11 @@
             lv2:name "Voice Mode" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
             lv2:scalePoint [ rdfs:label "Polyphony" ; rdf:value 0 ] ;
-            lv2:scalePoint [ rdfs:label "Mono (porta, re-attack)" ; rdf:value 1 ] ;
-            lv2:scalePoint [ rdfs:label "Mono (porta, legato)" ; rdf:value 2 ] ;
-            lv2:scalePoint [ rdfs:label "Mono (auto porta, re-attack)" ; rdf:value 3 ] ;
-            lv2:scalePoint [ rdfs:label "Mono (auto porta, legato)" ; rdf:value 4 ] ;
+            lv2:scalePoint [ rdfs:label "Mono (porta)" ; rdf:value 1 ] ;
+            lv2:scalePoint [ rdfs:label "Mono (auto porta)" ; rdf:value 2 ] ;
             lv2:default 0 ;
             lv2:minimum 0 ;
-            lv2:maximum 4 ;
+            lv2:maximum 2 ;
         ] ,
         [
             a lv2:InputPort , lv2:ControlPort ;
@@ -291,4 +289,17 @@
             lv2:default 1 ;
             lv2:minimum 1 ;
             lv2:maximum 100 ;
-        ] .
+        ] ,
+        [
+            a lv2:InputPort , lv2:ControlPort ;
+            lv2:index 26 ;
+            lv2:symbol "legato" ;
+            lv2:name "Legato" ;
+            lv2:portProperty lv2:integer , lv2:enumeration ;
+            lv2:scalePoint [ rdfs:label "None (Reattack from nothing)" ; rdf:value 0 ] ;
+            lv2:scalePoint [ rdfs:label "Legato (Reattack from prior level)" ; rdf:value 1 ] ;
+            lv2:scalePoint [ rdfs:label "Smooth Legato (Legato + No reattack if no release)" ; rdf:value 2 ] ;
+            lv2:default 0 ;
+            lv2:minimum 0 ;
+            lv2:maximum 2 ;
+        ] ,

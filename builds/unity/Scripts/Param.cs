@@ -31,7 +31,9 @@ namespace OvenMit
             P_PITCH_2,
 
             P_VOICE_MODE,
-            P_PORTAMENTO
+            P_PORTAMENTO,
+
+            P_LEGATO
         };
 
         public static readonly string[] PARAMETER_SYMBOLS = {
@@ -58,7 +60,8 @@ namespace OvenMit
             "level2",
             "pitch2",
             "voice_mode",
-            "portamento"
+            "portamento",
+            "legato"
         };
     }
 }
