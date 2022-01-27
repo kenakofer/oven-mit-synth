@@ -83,8 +83,8 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool r
     note = nt;
     controls = c;
 
-    target_freq = pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0;
-    target_freq2 = pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0;
+    target_freq = pow (2.0, (static_cast<double> (note) - 69.0 + controls->get(P_PITCH)) / 12.0) * 440.0;
+    target_freq2 = pow (2.0, (static_cast<double> (note) - 69.0 + controls->get(P_PITCH_2)) / 12.0) * 440.0;
 
     // In monophonic mode, we sometimes don't instantly go to the right
     // frequence, instead sliding to it (portmento)
@@ -296,7 +296,6 @@ inline void Key::proceed ()
 
     // Find oscillator 1's freq:
     float modfreq = freq;
-    modfreq *= pow (2.0, controls->get(P_PITCH) / 12.0);
     if (controls->get(P_ENV_MODE_1) == ENV_PITCH_1) {
         modfreq *= pow (2.0, adsr(1) * 12 / 12.0);
     }
