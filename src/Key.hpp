@@ -99,7 +99,7 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool r
     // old envelope and veloctiy shouldn't be overwritten, only the pitches
     if (reattack) {
         time = 0.0;
-        start_level_1 = adsr(1);
+        start_level_1 = adsr(1); // Can start out with prior amplitide if a release is followed by another press
         start_level_2 = adsr(2);
         velocity = vel;
     }
@@ -125,6 +125,8 @@ inline void Key::off ()
 {
     position = 0.0;
     position2 = 0.0;
+    start_level_1 = 0.0;
+    start_level_2 = 0.0;
     status = KEY_OFF;
 }
 
