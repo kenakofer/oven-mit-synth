@@ -26,10 +26,16 @@ namespace OvenMit
         public static extern long OvenMit_GetTimeInSamples();
 
         [DllImport("OvenMit")]
-        public static extern void OvenMit_ScheduleNote(int instance, int midiNote, int velocity, long start, long end);
+        public static extern void OvenMit_ScheduleNote(int instance, int midiNote, int velocity, double startbeat, double endbeat);
 
         [DllImport("OvenMit")]
         public static extern void OvenMit_SetSynthParameter(int instance, int parameterIndex, float value);
+
+        [DllImport("OvenMit")]
+        public static extern double OvenMit_GetGlobalBeat();
+
+        [DllImport("OvenMit")]
+        public static extern void OvenMit_SetGlobalSamplesPerBeat(double samplesPerBeat);
 
     }
 }

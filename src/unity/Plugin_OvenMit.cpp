@@ -9,7 +9,12 @@
 namespace OvenMit
 {
     const int MAX_KEYS = 1;
-    const int MAX_INSTANCES = (int)PARAM_LIMIT[P_UNITY_INSTANCE].second+1;
+    const int MAX_INSTANCES = 32;
+
+    // These are shared across instances, and help us do global logic exactly once per buffer.
+    static double global_samples_per_beat = 22100; // Default value: 120 bpm at 44.1 khz. Can be changed whenever by API calls.
+    static double global_beat = 0.0;    // Beat is tracked additively based on increases in the sample divided by global_samples_per_beat
+    static UInt64 global_sample = 0;    // This is simply copied from state->currdsptick. We only keep track of it as a convenient flag for if we need to run the global update.
 
     // This parameter is just for the instance of the AudioEffect that's
     // attached to an audio bus in the Unity Editor, which shouldn't be confused
@@ -37,7 +42,7 @@ namespace OvenMit
 
     inline OvenMitInstance* GetOvenMitInstance(int index)
     {
-        std::cout << "GetOvenMitInstance with index..." << index << std::endl;
+        // std::cout << "GetOvenMitInstance with index..." << index << std::endl;
         static bool initialized[MAX_INSTANCES] = { false };
         static OvenMitInstance instance[MAX_INSTANCES];
         if (index < 0 || index >= MAX_INSTANCES)
@@ -51,7 +56,7 @@ namespace OvenMit
                 instance[index].synth.setControl(p, PARAM_DEFAULT[p]);
             }
         }
-        std::cout << "    ...finished" << std::endl;
+        // std::cout << "    ...finished" << std::endl;
         return &instance[index];
     }
 
@@ -66,25 +71,43 @@ namespace OvenMit
         return UNITY_PARAM_NUM;
     }
 
+    void globalProcess(UnityAudioEffectState* state) {
+        global_beat += (state->currdsptick - global_sample) / global_samples_per_beat;
+        global_sample = state->currdsptick;
+        // std::cout << "Running globalProcess by instance# " << state->GetEffectData<EffectData>()->parameters[INSTANCE_INDEX] << std::endl;
+    }
+
+    // May not be accurate after tempo changes, but when used within the time of a buffer it will be fine.
+    long beatToSample(double beat) {
+        return global_sample + (long)(global_samples_per_beat * (beat - global_beat));
+    }
+
     UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK ProcessCallback(UnityAudioEffectState* state, float* inbuffer, float* outbuffer, unsigned int length, int inchannels, int outchannels)
     {
         // TODO find a way for this method to work when two audioeffects share the same synth index
 
-        std::cout << "ProcessCallback..." << std::endl;
+        // Run the globalProcess only once, no matter if we have 1 or 32 synths
+        if (global_sample != state->currdsptick) {
+            globalProcess(state);
+        }
+
+        // std::cout << "ProcessCallback..." << std::endl;
         EffectData* data = state->GetEffectData<EffectData>();
         OvenMitInstance* instance = GetOvenMitInstance(data->parameters[INSTANCE_INDEX]);
         Synth* synth = &instance->synth;
 
-        UInt64 tick = state->currdsptick; // Global time in samples plus frames within this buffer
-        std::cout << "  ...starting buffer at tick: " << tick << std::endl;
+        UInt64 tick = global_sample; // Global time in samples plus frames within this buffer
+        // std::cout << "  ...starting buffer at tick: " << tick << std::endl;
         int frame = 0;                    // Time within this buffer, range is [0, length]
 
         while (frame < length) {
             // Process any events that are ready
-            long next_event_at = instance->note_event_queue.empty() ? LONG_MAX : instance->note_event_queue.top().wait_for_sample;
+            long next_event_at = instance->note_event_queue.empty() ? LONG_MAX : beatToSample(instance->note_event_queue.top().wait_for_beat);
+            // std::cout << " ...next_event_at set to" << next_event_at << std::endl;
             while (tick >= next_event_at) {
+                // std::cout << "tick " << tick << " was greater than next_event_at" << next_event_at << std::endl;
                 const NoteEvent top = instance->note_event_queue.top();
-                std::cout << " ...Note Event with wait_for_sample: " << top.wait_for_sample << std::endl;
+                std::cout << " ...Note Event with wait_for_beat: " << top.wait_for_beat << std::endl;
                 switch (top.event_type) {
                     case NoteStart:
                         std::cout << " ...Start scheduled note: " << top.note << std::endl;
@@ -99,7 +122,8 @@ namespace OvenMit
                 instance->note_event_queue.pop();
                 std::cout << "  ...New size of event queue: " << instance->note_event_queue.size() << std::endl;
                 // If empty, place the next_event_at to basically infinity
-                next_event_at = instance->note_event_queue.empty() ? LONG_MAX : instance->note_event_queue.top().wait_for_sample;
+                next_event_at = instance->note_event_queue.empty() ? LONG_MAX : beatToSample(instance->note_event_queue.top().wait_for_beat);
+                // std::cout << " ...2 next_event_at set to" << next_event_at << std::endl;
             }
 
             // Step forward to the end of the frame, or to the next event, whichever is sooner.
@@ -108,14 +132,14 @@ namespace OvenMit
                 framesToNext = next_event_at - tick;
 
             // Synthesizer does MAGIC to compute samples
-            std::cout << "...outputSamples from " << frame << " to " << frame+framesToNext << std::endl;
+            // std::cout << "...outputSamples from " << frame << " to " << frame+framesToNext << std::endl;
             synth->outputSamples(outbuffer, frame, frame+framesToNext, outchannels);
 
             frame += framesToNext;
             tick += framesToNext;
         }
 
-        std::cout << "...finished" << std::endl;
+        // std::cout << "...finished" << std::endl;
         return UNITY_AUDIODSP_OK;
     }
 
@@ -170,19 +194,21 @@ namespace OvenMit
         std::cout << "   ...finished." << std::endl;
     }
 
+    // TODO stopallsounds taking no parameters does so for all instances.
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_StopAllSounds(int instance_index) {
         std::cout << "OvenMit_StopAllSounds..." << std::endl;
         GetOvenMitInstance(instance_index)->synth.stopAllSounds();
         std::cout << "   ...finished." << std::endl;
     }
 
-    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_ScheduleNote(int instance_index, int midiNote, int velocity, long start, long end) {
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_ScheduleNote(int instance_index, int midiNote, int velocity, double startbeat, double endbeat) {
+        if (startbeat >= endbeat) endbeat = startbeat + 0.0001; // Don't allow 0 or negative width notes
         std::cout << "OvenMit_ScheduleNote..." << std::endl;
         OvenMitInstance* instance = GetOvenMitInstance(instance_index);
-        std::cout << "  ...Push start" << instance_index << " " << midiNote << " " << velocity << " " << start << " " << end << std::endl;
-        instance->note_event_queue.push(NoteEvent(NoteStart, start, instance_index, midiNote, velocity));
+        std::cout << "  ...Push start" << instance_index << " " << midiNote << " " << velocity << " " << startbeat << " " << endbeat << std::endl;
+        instance->note_event_queue.push(NoteEvent(NoteStart, startbeat, instance_index, midiNote, velocity));
         std::cout << "  ...Push end" << std::endl;
-        instance->note_event_queue.push(NoteEvent(NoteRelease, end, instance_index, midiNote, velocity));
+        instance->note_event_queue.push(NoteEvent(NoteRelease, endbeat, instance_index, midiNote, velocity));
         std::cout << "   ...finished." << std::endl;
     }
 
@@ -190,6 +216,14 @@ namespace OvenMit
         OvenMitInstance* instance = GetOvenMitInstance(instance_index);
         instance->synth.setControl(parameter_index, value);
     }
+
+    extern "C" UNITY_AUDIODSP_EXPORT_API double OvenMit_GetGlobalBeat() {
+        return global_beat;
+    }
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetGlobalSamplesPerBeat(double samples_per_beat) {
+        global_samples_per_beat = samples_per_beat;
+    }
+
 
     ////////////////////////////////////////////
     /* Boilerplate copied from Unity examples */
@@ -208,7 +242,7 @@ namespace OvenMit
     {
         EffectData* data = state->GetEffectData<EffectData>();
         OvenMitInstance* instance = GetOvenMitInstance(data->parameters[INSTANCE_INDEX]);;
-        std::cout << "SetFloatParameterCallback on instance... " << (int)data->parameters[P_UNITY_INSTANCE] << " param index " << index << " to " << value << std::endl;
+        std::cout << "SetFloatParameterCallback on instance... " << (int)data->parameters[INSTANCE_INDEX] << " param index " << index << " to " << value << std::endl;
         if (index >= UNITY_PARAM_NUM)
             return UNITY_AUDIODSP_ERR_UNSUPPORTED;
         data->parameters[index] = value;
