@@ -1,3 +1,5 @@
+using System;
+
 namespace OvenMit
 {
     public static class Param
@@ -35,6 +37,7 @@ namespace OvenMit
 
             P_LEGATO
         };
+        public static readonly int P_NUM = Enum.GetValues( typeof( SynthParameters ) ).Length;
 
         public static readonly string[] PARAMETER_SYMBOLS = {
             "env_mode_1",

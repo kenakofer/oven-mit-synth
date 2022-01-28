@@ -1,4 +1,3 @@
-using UnityEngine;
 using System;
 using System.Runtime.InteropServices;
 using System.Xml;
@@ -6,16 +5,23 @@ using System.Xml;
 
 namespace OvenMit
 {
-    public static class PatchLoader
+
+    public class OvenMitPreset {
+        public string name;
+        public float[] parameters = new float[Param.P_NUM];
+    }
+
+    public static class PresetLoader
     {
         const string LMMS_XML_PARAMETER_TAG_NAME = "models";
         const string LMMS_XML_CHILD_VALUE_ATTRIBUTE_NAME = "value";
 
-        public static void LoadPatchFromFile(int instance_index, string path)
+        public static OvenMitPreset LoadPresetFromFile(string path)
         {
-            string fullPath = Application.streamingAssetsPath + "/" + path;
             XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.Load(fullPath);
+            xmlDoc.Load(path);
+
+            OvenMitPreset preset = new OvenMitPreset();
 
             // There should only be one <models> element in the xml
             foreach (XmlElement elem in xmlDoc.GetElementsByTagName(LMMS_XML_PARAMETER_TAG_NAME)) {
@@ -27,8 +33,7 @@ namespace OvenMit
                     string stringvalue = elem.GetAttribute(name);
                     if (stringvalue != "") {
                         float value = float.Parse(stringvalue);
-                        Debug.Log("Attribute: "+ (int)param + " " + name + " " + stringvalue);
-                        Native.OvenMit_SetSynthParameter(instance_index, (int)param, value);
+                        preset.parameters[(int)param] = value;
                     }
                 }
                 // When the scale_type is log, LMMS stores those parameters as
@@ -38,10 +43,11 @@ namespace OvenMit
                     string name = Param.PARAMETER_SYMBOLS[(int)param];
                     if (elem[name] == null) continue;
                     float value = float.Parse(elem[name].GetAttribute(LMMS_XML_CHILD_VALUE_ATTRIBUTE_NAME));
-                    Debug.Log("Attribute: "+ (int)param + " " + name + " " + value.ToString());
-                    Native.OvenMit_SetSynthParameter(instance_index, (int)param, value);
+                    preset.parameters[(int)param] = value;
                 }
             }
+
+            return preset;
         }
     }
 }
