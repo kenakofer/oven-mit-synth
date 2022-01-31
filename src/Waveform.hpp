@@ -3,9 +3,10 @@
 
 #include <array>
 #include "ConstCache.hpp"
-#include "whiteband500to1k.hpp"
+// #include "whiteband500to1k.hpp"
 #include "whiteband1000to1100.hpp"
 #include "whiteband1000to1500.hpp"
+#include "whiteband1000to4000.hpp"
 
 enum Waveform
 {
@@ -69,12 +70,20 @@ inline float valueFromThinNoiseCache(float position) {
     return CACHE_WHITEBAND1000TO1100[0][i];
 
 }
-const float SAMPLES_PER_THICK_NOISE_CYCLE = 44100.0f / 312.5;
+const float SAMPLES_PER_THICK_NOISE_CYCLE = 44100.0f / 250;
 inline float valueFromThickNoiseCache(float position) {
     int i = (int)(WHITEBAND1000TO1500_LENGTH * position / SAMPLES_PER_THICK_NOISE_CYCLE);
     i %= WHITEBAND1000TO1500_LENGTH;
 
     return CACHE_WHITEBAND1000TO1500[0][i];
+
+}
+const float SAMPLES_PER_THICKER_NOISE_CYCLE = 44100.0f / 250;
+inline float valueFromThickerNoiseCache(float position) {
+    int i = (int)(WHITEBAND1000TO4000_LENGTH * position / SAMPLES_PER_THICKER_NOISE_CYCLE);
+    i %= WHITEBAND1000TO4000_LENGTH;
+
+    return .6 * CACHE_WHITEBAND1000TO4000[0][i];
 
 }
 
@@ -88,14 +97,19 @@ inline float noiseBand(float bottom_freq, float partial_index, float position) {
     while (pfreq < top_freq) {
         if (pfreq > top_freq) break;
 
-        if (top_freq / pfreq > 1.6) {
+        float ratio = top_freq / pfreq;
+
+        if (ratio > 4.5) {
+            value += valueFromThickerNoiseCache(position * p);
+            p *= 3.9f;
+        } else if (ratio > 1.6) {
             value += valueFromThickNoiseCache(position * p);
-            p *= 1.38f;
+            p *= 1.3f;
         } else {
-            if (top_freq / pfreq > 1.33) {
+            if (ratio > 1.33) {
                 value += valueFromThinNoiseCache(position * p);
             } else {
-                value += (top_freq / pfreq - 1.0) * 3 * valueFromThinNoiseCache(position * p);
+                value += (ratio - 1.0) * 3 * valueFromThinNoiseCache(position * p);
             }
             p *= 1.12f;
         }
