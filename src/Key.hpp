@@ -31,6 +31,7 @@ private:
     double target_freq;
     double freq2;
     double target_freq2;
+    double modfreq1;
     double time;
     double portamento_factor;
     Controls* controls;
@@ -72,6 +73,7 @@ inline Key::Key (const double rt) :
     start_level_1 (0.0f),
     start_level_2 (0.0f),
     freq (pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0),
+    modfreq1 (freq),
     time (0.0)
 {
 
@@ -91,6 +93,7 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool r
         // no portamento, just set to the target freq
         freq = target_freq;
         freq2 = target_freq2;
+        modfreq1 = freq;
     } else {
         portamento_factor = 1.0 + .001 / (*controls).get(P_PORTAMENTO);
     }
@@ -209,7 +212,7 @@ inline float Key::synthPartials()
     if (controls->get(P_FILTER) == FILTER_LOWPASS) {
         return lowPassInWave(
             static_cast<Waveform> (controls->get(P_WAVEFORM)),
-            freq,
+            modfreq1,
             position,
             cutoff_partial,
             controls->get(P_RES_WIDTH), controls->get(P_RES_HEIGHT)
@@ -217,7 +220,7 @@ inline float Key::synthPartials()
     } else {
         return highPassInWave(
             static_cast<Waveform> (controls->get(P_WAVEFORM)),
-            freq,
+            modfreq1,
             position,
             cutoff_partial,
             controls->get(P_RES_WIDTH), controls->get(P_RES_HEIGHT)
@@ -302,19 +305,18 @@ inline void Key::proceed ()
         }
     }
 
-    // Find oscillator 1's freq:
-    float modfreq = freq;
+    modfreq1 = freq;
     if (controls->get(P_ENV_MODE_1) == ENV_PITCH_1) {
-        modfreq *= pow (2.0, adsr(1) * 12 / 12.0);
+        modfreq1 *= pow (2.0, adsr(1) * 12 / 12.0);
     }
     if (controls->get(P_ENV_MODE_2) == ENV_PITCH_1) {
-        modfreq *= pow (2.0, adsr(2) * controls->get(P_ENV_AMT_2) * 4 / 12.0); // Scale by 4 so it covers more
+        modfreq1 *= pow (2.0, adsr(2) * controls->get(P_ENV_AMT_2) * 4 / 12.0); // Scale by 4 so it covers more
     }
     if (controls->get(P_WAVEFORM_2_MODE) == OSC_FM_1) {
-        modfreq *= 1 + synth2();
+        modfreq1 *= 1 + synth2();
     }
     // Move Osc 1 forward correctly
-    position += modfreq / rate;
+    position += modfreq1 / rate;
 
     // Move Osc 2 forward correctly
     position2 += freq2 / rate;
