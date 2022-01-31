@@ -62,7 +62,7 @@ inline float valueFromCache(Waveform waveform, float partial_index, float positi
     }
 }
 
-const float SAMPLES_PER_THIN_NOISE_CYCLE = 44100.0f / 262.5;
+const float SAMPLES_PER_THIN_NOISE_CYCLE = 44100.0f / 250;
 inline float valueFromThinNoiseCache(float position) {
     int i = (int)(WHITEBAND1000TO1100_LENGTH * position / SAMPLES_PER_THIN_NOISE_CYCLE);
     i %= WHITEBAND1000TO1100_LENGTH;
@@ -87,16 +87,17 @@ inline float valueFromThickerNoiseCache(float position) {
 
 }
 
-inline float noiseBand(float bottom_freq, float partial_index, float position) {
+const float NOISE_CUTOFF_FREQ = NYQUIST_FREQ * .35;
+inline float lowPassNoise(float bottom_freq, float partial_index, float position) {
     float value = 0.0f;
-    float pfreq = bottom_freq;
-    float top_freq = bottom_freq * (partial_index + 1.1);
-    if (top_freq > NYQUIST_FREQ * .33) top_freq = NYQUIST_FREQ * .33; // Due to frequency scaling
+    float pfreq, top_freq, p;
 
-    float p = 1.0f;
+    p = 1.0f;
+    top_freq = bottom_freq * (partial_index + 1.1);
+    if (top_freq > NOISE_CUTOFF_FREQ) top_freq = NOISE_CUTOFF_FREQ; // Due to frequency scaling
+
+    pfreq = bottom_freq * p;
     while (pfreq < top_freq) {
-        if (pfreq > top_freq) break;
-
         float ratio = top_freq / pfreq;
 
         if (ratio > 4.5) {
@@ -116,7 +117,44 @@ inline float noiseBand(float bottom_freq, float partial_index, float position) {
         pfreq = bottom_freq * p;
     }
     return value;
+}
 
+inline float highPassNoise(float fund_freq, float partial_index, float position) {
+    float value = 0.0f;
+    float pfreq, top_freq, bottom_freq, p;
+
+
+    p = partial_index + 1;
+    bottom_freq = fund_freq * p;
+    top_freq = NOISE_CUTOFF_FREQ;
+
+    p = top_freq / fund_freq; // P will decrease toward 0 each time
+    pfreq = top_freq;
+    while (pfreq > bottom_freq) {
+        float ratio = pfreq / bottom_freq;
+
+        if (ratio > 4.5) {
+            // std::cout << "4";
+            p /= 4.0f;
+            value += valueFromThickerNoiseCache(position * p);
+        } else if (ratio > 1.6) {
+            // std::cout << "1";
+            p /= 1.4f;
+            value += valueFromThickNoiseCache(position * p);
+        } else {
+            p /= 1.1f;
+            if (ratio > 1.33) {
+                // std::cout << ",";
+                value += valueFromThinNoiseCache(position * p);
+            } else {
+                // std::cout << ".";
+                value += (ratio - 1.0) * 3 * valueFromThinNoiseCache(position * p);
+            }
+        }
+        pfreq = fund_freq * p;
+    }
+    // std::cout << std::endl;
+    return value;
 }
 
 inline float valueInWaveform(Waveform waveform, double position) {
