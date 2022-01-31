@@ -91,7 +91,7 @@ inline float noiseBand(float bottom_freq, float partial_index, float position) {
     float value = 0.0f;
     float pfreq = bottom_freq;
     float top_freq = bottom_freq * (partial_index + 1.1);
-    if (top_freq > NYQUIST_FREQ * .4) top_freq = NYQUIST_FREQ * .4;
+    if (top_freq > NYQUIST_FREQ * .33) top_freq = NYQUIST_FREQ * .33; // Due to frequency scaling
 
     float p = 1.0f;
     while (pfreq < top_freq) {
