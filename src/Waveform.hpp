@@ -83,7 +83,7 @@ inline float valueFromThickerNoiseCache(float position) {
     int i = (int)(WHITEBAND1000TO4000_LENGTH * position / SAMPLES_PER_THICKER_NOISE_CYCLE);
     i %= WHITEBAND1000TO4000_LENGTH;
 
-    return .6 * CACHE_WHITEBAND1000TO4000[0][i];
+    return CACHE_WHITEBAND1000TO4000[0][i];
 
 }
 
