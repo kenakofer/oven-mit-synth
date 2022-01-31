@@ -4,6 +4,8 @@
 #include <array>
 #include "ConstCache.hpp"
 #include "whiteband500to1k.hpp"
+#include "whiteband1000to1100.hpp"
+#include "whiteband1000to1500.hpp"
 
 enum Waveform
 {
@@ -36,6 +38,8 @@ enum Waveform
 //     }
 // }
 
+const float NYQUIST_FREQ = 21000; // Even at higher framerates, no sense generating beyond hearing range
+
 inline float valueFromCache(Waveform waveform, float partial_index, float position) {
     if (partial_index >= CACHE_PARTIALS-1) partial_index = CACHE_PARTIALS - 1 - 0.01f;
     if (partial_index < 0) partial_index = 0.0f;
@@ -57,19 +61,47 @@ inline float valueFromCache(Waveform waveform, float partial_index, float positi
     }
 }
 
-const float SAMPLES_PER_NOISE_CYCLE = 44100.0f / 750;
-inline float valueFromNoiseCache(float partial_index, float position) {
-    if (partial_index >= WHITEBAND500TO1K_PARTIALS-2) partial_index = WHITEBAND500TO1K_PARTIALS - 2 - .01;
-    if (partial_index < 0) partial_index = 0.0f;
+const float SAMPLES_PER_THIN_NOISE_CYCLE = 44100.0f / 262.5;
+inline float valueFromThinNoiseCache(float position) {
+    int i = (int)(WHITEBAND1000TO1100_LENGTH * position / SAMPLES_PER_THIN_NOISE_CYCLE);
+    i %= WHITEBAND1000TO1100_LENGTH;
 
-    int i = (int)(WHITEBAND500TO1K_LENGTH * position / SAMPLES_PER_NOISE_CYCLE);
-    i %= WHITEBAND500TO1K_LENGTH;
+    return CACHE_WHITEBAND1000TO1100[0][i];
 
-    const int bottom_partial = (int)partial_index;
-    const float p2 = partial_index - bottom_partial;
-    const float p1 = 1.0f - p2;
+}
+const float SAMPLES_PER_THICK_NOISE_CYCLE = 44100.0f / 312.5;
+inline float valueFromThickNoiseCache(float position) {
+    int i = (int)(WHITEBAND1000TO1500_LENGTH * position / SAMPLES_PER_THICK_NOISE_CYCLE);
+    i %= WHITEBAND1000TO1500_LENGTH;
 
-    return p1 * CACHE_WHITEBAND500TO1K[bottom_partial][i] + p2 * CACHE_WHITEBAND500TO1K[bottom_partial+1][i];
+    return CACHE_WHITEBAND1000TO1500[0][i];
+
+}
+
+inline float noiseBand(float bottom_freq, float partial_index, float position) {
+    float value = 0.0f;
+    float pfreq = bottom_freq;
+    float top_freq = bottom_freq * (partial_index + 1.1);
+    if (top_freq > NYQUIST_FREQ * .4) top_freq = NYQUIST_FREQ * .4;
+
+    float p = 1.0f;
+    while (pfreq < top_freq) {
+        if (pfreq > top_freq) break;
+
+        if (top_freq / pfreq > 1.6) {
+            value += valueFromThickNoiseCache(position * p);
+            p *= 1.38f;
+        } else {
+            if (top_freq / pfreq > 1.33) {
+                value += valueFromThinNoiseCache(position * p);
+            } else {
+                value += (top_freq / pfreq - 1.0) * 3 * valueFromThinNoiseCache(position * p);
+            }
+            p *= 1.12f;
+        }
+        pfreq = bottom_freq * p;
+    }
+    return value;
 
 }
 
