@@ -1,19 +1,15 @@
 SRCS=AudioPluginUtil.cpp \
 Plugin_OvenMit.cpp
 OBJS=$(SRCS:.cpp=.o)
-OUTPUT=../../builds/unity/Plugins/libOvenMit.so
-CXXFLAGS=-I. -O2 -fPIC
-LDFLAGS=-shared -rdynamic -fPIC
-# CXXFLAGS=-fvisibility=hidden -I. -O3 -ffast-math -fPIC -Wl,-Bstatic -Wl,-Bdynamic -Wl,--as-needed
-# LDFLAGS=-shared -rdynamic -fPIC
-CXX=g++
 
-all: $(OUTPUT)
+NIX_OUTPUT=../../builds/unity/Plugins/Linux64/libOvenMit.so
+WIN_OUTPUT=../../builds/unity/Plugins/Win64/libOvenMit.dll
+
+nix:
+	make -f makefile.nix
+
 clean:
-	rm -f $(OUTPUT) $(OBJS)
+	rm -f $(OBJS)
 
-$(OUTPUT): $(OBJS)
-	$(CXX) $(LDFLAGS) -o $(OUTPUT) $(OBJS)
-
-.cpp.o:
-	$(CXX) $(CXXFLAGS) -c $<
+win:
+	make -f makefile.win
