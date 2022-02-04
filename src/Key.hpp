@@ -84,8 +84,17 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool r
     note = nt;
     controls = c;
 
+    // Set OSC 1 freq based on the MIDI note number, adjusting for pitch 1 offset.
     target_freq = pow (2.0, (static_cast<double> (note) - 69.0 + controls->get(P_PITCH)) / 12.0) * 440.0;
-    target_freq2 = pow (2.0, (static_cast<double> (note) - 69.0 + controls->get(P_PITCH_2)) / 12.0) * 440.0;
+
+    if (controls->get(P_KEYTRACK_2) == KEYTRACK_ON) {
+        // With keytracking off, base the second OSC frequncy on the MIDI note, adjusting for pitch2
+        target_freq2 = pow (2.0, (static_cast<double> (note) - 69.0 + controls->get(P_PITCH_2)) / 12.0) * 440.0;
+    } else {
+        // With keytracking off, base the second OSC frequncy on A220, adjusting for pitch2. This should be useful for basic LFO stuff
+        // The "* 2" is so that we have a greater pitch range in this case. So changing the slider by 6 is actually an octave in this mode.
+        target_freq2 = pow (2.0, controls->get(P_PITCH_2) * 2 / 12.0) * 220.0;
+    }
 
     // In monophonic mode, we sometimes don't instantly go to the right
     // frequence, instead sliding to it (portmento)
