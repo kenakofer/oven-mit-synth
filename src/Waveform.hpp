@@ -62,6 +62,17 @@ inline float valueFromCache(Waveform waveform, float partial_index, float positi
     }
 }
 
+inline float rawValueFromCache(Waveform waveform, int partial_index, int position_index) {
+    switch (waveform)
+    {
+        case WAVEFORM_SINE:     return CACHE_SINE[partial_index][position_index];
+        case WAVEFORM_TRIANGLE: return CACHE_TRIANGLE[partial_index][position_index];
+        case WAVEFORM_SQUARE:   return CACHE_SQUARE[partial_index][position_index];
+        case WAVEFORM_SAW:      return CACHE_SAW[partial_index][position_index];
+        default:                return 0.0f;
+    }
+}
+
 const float SAMPLES_PER_THIN_NOISE_CYCLE = 44100.0f / 250;
 inline float valueFromThinNoiseCache(float position) {
     int i = (int)(WHITEBAND1000TO1100_LENGTH * position / SAMPLES_PER_THIN_NOISE_CYCLE);
