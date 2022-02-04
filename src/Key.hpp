@@ -269,10 +269,16 @@ inline float Key::get ()
 
     if (controls->get(P_ENV_MODE_1) == ENV_LEVEL_1) {
         value *= adsr(1);
+        if (controls->get(P_ENV_MODE_2) == ENV_LEVEL_1) {
+            value *= adsr(2);
+        }
+    } else if (controls->get(P_ENV_MODE_2) == ENV_LEVEL_1) {
+            value *= adsr(2);
+    } else {
+            // If no envelope is targeting ENV_LEVEL_1, use env 1 for it anyways.
+            value *= adsr(1);
     }
-    if (controls->get(P_ENV_MODE_2) == ENV_LEVEL_1) {
-        value *= adsr(2);
-    }
+
     if (controls->get(P_WAVEFORM_2_MODE) == OSC_AM_1) {
         value *= 1 + synth2();
     }
@@ -331,8 +337,8 @@ inline void Key::proceed ()
     position2 += freq2 / rate;
 
     if ((status == KEY_RELEASED) &&
-            (time >= controls->get(P_RELEASE)) &&
-            (time >= controls->get(P_RELEASE_2) || !(controls->get(P_ENV_MODE_2) == ENV_LEVEL_1  || controls->get(P_ENV_MODE_2) == ENV_LEVEL_2))
+            (time >= controls->get(P_RELEASE)) && // Wait for envelope 1 to finish releasing regardless
+            (time >= controls->get(P_RELEASE_2) || !(controls->get(P_ENV_MODE_2) == ENV_LEVEL_1  || controls->get(P_ENV_MODE_2) == ENV_LEVEL_2)) // Wait for envelope 2 if it's targeting either oscillator level
             ) {
         off();
     }
