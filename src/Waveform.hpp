@@ -44,7 +44,7 @@ const float NYQUIST_FREQ = 21000; // Even at higher framerates, no sense generat
 inline float valueFromCache(Waveform waveform, float partial_index, float position) {
     if (partial_index >= CACHE_PARTIALS-1) partial_index = CACHE_PARTIALS - 1 - 0.01f;
     if (partial_index < 0) partial_index = 0.0f;
-    position = fmod(position, 1.0);
+    position -= (int)position;
 
     const int i = (int)(CACHE_SAMPLES * position);
     const int bottom_partial = (int)partial_index;
@@ -171,7 +171,7 @@ inline float highPassNoise(float fund_freq, float partial_index, float position)
 inline float valueInWaveform(Waveform waveform, double position) {
     if (waveform == WAVEFORM_SAW) position += .5; // To line up with the partial amplitudes above
 
-    const float p = fmod (position, 1.0);
+    const float p = position - (int)position;
     switch (waveform)
     {
         case WAVEFORM_SINE:     return sin (2.0 * M_PI * p);
