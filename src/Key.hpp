@@ -32,6 +32,7 @@ private:
     double freq2;
     double target_freq2;
     double modfreq1;
+    double modfreq2;
     double time;
     double portamento_factor;
     Controls* controls;
@@ -73,7 +74,9 @@ inline Key::Key (const double rt) :
     start_level_1 (0.0f),
     start_level_2 (0.0f),
     freq (pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0),
+    freq2 (pow (2.0, (static_cast<double> (note) - 69.0) / 12.0) * 440.0),
     modfreq1 (freq),
+    modfreq2 (freq),
     time (0.0)
 {
 
@@ -103,6 +106,7 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool r
         freq = target_freq;
         freq2 = target_freq2;
         modfreq1 = freq;
+        modfreq2 = freq2;
     } else {
         portamento_factor = 1.0 + .001 / (*controls).get(P_PORTAMENTO);
     }
@@ -247,7 +251,7 @@ inline float Key::synth2()
         // Dealiased wave: (partials only up to nyquist (22k))
         value = lowPassInWave(
                 static_cast<Waveform> (controls->get(P_WAVEFORM_2)),
-                freq2,
+                modfreq2,
                 position2,
                 10000, // Take all the partials!
                 controls->get(P_RES_WIDTH), controls->get(P_RES_HEIGHT)
@@ -320,6 +324,7 @@ inline void Key::proceed ()
         }
     }
 
+    // Calculate instantaneous frequncy for osc 1
     modfreq1 = freq;
     if (controls->get(P_ENV_MODE_1) == ENV_PITCH_1) {
         modfreq1 *= pow (2.0, adsr(1) * 12 / 12.0);
@@ -333,8 +338,16 @@ inline void Key::proceed ()
     // Move Osc 1 forward correctly
     position += modfreq1 / rate;
 
+    // Calculate instantaneous frequncy for osc 2
+    modfreq2 = freq2;
+    if (controls->get(P_ENV_MODE_1) == ENV_PITCH_2) {
+        modfreq2 *= pow (2.0, adsr(1) * 12 / 12.0);
+    }
+    if (controls->get(P_ENV_MODE_2) == ENV_PITCH_2) {
+        modfreq2 *= pow (2.0, adsr(2) * controls->get(P_ENV_AMT_2) * 4 / 12.0); // Scale by 4 so it covers more
+    }
     // Move Osc 2 forward correctly
-    position2 += freq2 / rate;
+    position2 += modfreq2 / rate;
 
     if ((status == KEY_RELEASED) &&
             (time >= controls->get(P_RELEASE)) && // Wait for envelope 1 to finish releasing regardless

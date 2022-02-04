@@ -43,9 +43,10 @@
             lv2:scalePoint [ rdfs:label "Pitch 1" ; rdf:value 1 ] ;
             lv2:scalePoint [ rdfs:label "Cutoff 1" ; rdf:value 2 ] ;
             lv2:scalePoint [ rdfs:label "Level 2" ; rdf:value 3 ] ;
+            lv2:scalePoint [ rdfs:label "Pitch 2" ; rdf:value 4 ] ;
             lv2:default 0 ;
             lv2:minimum 0 ;
-            lv2:maximum 3 ;
+            lv2:maximum 4 ;
         ] ,
         [
             a lv2:InputPort , lv2:ControlPort ;
@@ -169,9 +170,10 @@
             lv2:scalePoint [ rdfs:label "Pitch 1" ; rdf:value 1 ] ;
             lv2:scalePoint [ rdfs:label "Cutoff 1" ; rdf:value 2 ] ;
             lv2:scalePoint [ rdfs:label "Level 2" ; rdf:value 3 ] ;
+            lv2:scalePoint [ rdfs:label "Pitch 2" ; rdf:value 4 ] ;
             lv2:default 3 ;
             lv2:minimum 0 ;
-            lv2:maximum 3 ;
+            lv2:maximum 4 ;
         ] ,
         [
             a lv2:InputPort , lv2:ControlPort ;

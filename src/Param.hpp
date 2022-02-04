@@ -41,7 +41,7 @@ enum Param
 
 constexpr std::array<std::pair<float, float>, P_NUM_CONTROLS> PARAM_LIMIT =
 {{
-    {0.0f, 3.0f},           // ENV_MODE_1
+    {0.0f, 4.0f},           // ENV_MODE_1
     {0.001f, 4.0f},         // ATTACK
     {0.001f, 4.0f},         // DECAY
     {0.0f, 1.0f},           // SUSTAIN
@@ -56,7 +56,7 @@ constexpr std::array<std::pair<float, float>, P_NUM_CONTROLS> PARAM_LIMIT =
     {0.0f, 8.0f},           // RES_HEIGHT
     {1.0f, 30.0f},          // RES_WIDTH
 
-    {0.0f, 3.0f},           // ENV MODE 2
+    {0.0f, 4.0f},           // ENV MODE 2
     {0.0f, 10.0f},          // ENV_AMT_2
     {0.001f, 4.0f},         // ATTACK
     {0.001f, 4.0f},         // DECAY

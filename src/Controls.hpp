@@ -21,7 +21,8 @@ enum EnvelopeModes
     ENV_LEVEL_1,
     ENV_PITCH_1,
     ENV_CUTOFF_1,
-    ENV_LEVEL_2
+    ENV_LEVEL_2,
+    ENV_PITCH_2,
 };
 enum FilterTypes
 {
