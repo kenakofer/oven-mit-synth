@@ -41,12 +41,9 @@ enum Waveform
 
 const float NYQUIST_FREQ = 21000; // Even at higher framerates, no sense generating beyond hearing range
 
-inline float valueFromCache(Waveform waveform, float partial_index, float position) {
+inline float valueFromCacheIndex(Waveform waveform, float partial_index, int i) {
     if (partial_index >= CACHE_PARTIALS-1) partial_index = CACHE_PARTIALS - 1 - 0.01f;
     if (partial_index < 0) partial_index = 0.0f;
-    position -= (int)position;
-
-    const int i = (int)(CACHE_SAMPLES * position);
     const int bottom_partial = (int)partial_index;
     const float p2 = partial_index - bottom_partial;
     const float p1 = 1.0f - p2;
@@ -60,6 +57,12 @@ inline float valueFromCache(Waveform waveform, float partial_index, float positi
         case WAVEFORM_SAW:      return p1 * CACHE_SAW[bottom_partial][i] + p2 * CACHE_SAW[bottom_partial+1][i];
         default:                return 0.0f;
     }
+}
+
+inline float valueFromCache(Waveform waveform, float partial_index, float position) {
+    position -= (int)position;
+    const int i = (int)(CACHE_SAMPLES * position);
+    return valueFromCacheIndex(waveform, partial_index, i);
 }
 
 inline float rawValueFromCache(Waveform waveform, int partial_index, int position_index) {
