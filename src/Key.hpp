@@ -118,13 +118,18 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool r
         // Full reattack
         start_level_1 = 0;
         start_level_2 = 0;
+        time = 0.0;
     } else {
-        // Start at the key's prior start_level, then reset time
-        start_level_1 = adsr(1) * velocity / vel;
-        start_level_2 = adsr(2) * velocity / vel;
+        if (status == KEY_PRESSED) {
+            // Probably in mono mode to be here. Don't change the envelope at all
+        } else {
+            // Key has been released, but may still be lingering.
+            // Start at the key's prior start_level, then reset time
+            start_level_1 = adsr(1) * velocity / vel;
+            start_level_2 = adsr(2) * velocity / vel;
+            time = 0.0;
+        }
     }
-
-    time = 0.0;
     velocity = vel;
     status = KEY_PRESSED;
 }
