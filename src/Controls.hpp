@@ -37,7 +37,12 @@ enum VoiceModes
 enum LegatoModes
 {
     LEGATO_OFF,
-    LEGATO_ON, // TODO better name?
+    LEGATO_ON,
+};
+enum KeytrackModes
+{
+    KEYTRACK_OFF,
+    KEYTRACK_ON,
 };
 
 class Controls {

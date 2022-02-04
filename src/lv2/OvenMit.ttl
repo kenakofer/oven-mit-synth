@@ -225,7 +225,7 @@
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 20 ;
             lv2:symbol "waveform2mode" ;
-            lv2:name "Waveform 2 Mode" ;
+            lv2:name "Osc 2 Mode" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
             lv2:scalePoint [ rdfs:label "Add" ; rdf:value 0 ] ;
             lv2:scalePoint [ rdfs:label "FM 1" ; rdf:value 1 ] ;
@@ -271,6 +271,18 @@
         [
             a lv2:InputPort , lv2:ControlPort ;
             lv2:index 24 ;
+            lv2:symbol "keytrack2" ;
+            lv2:name "Keytrack 2" ;
+            lv2:portProperty lv2:integer , lv2:enumeration ;
+            lv2:scalePoint [ rdfs:label "Off" ; rdf:value 0 ] ;
+            lv2:scalePoint [ rdfs:label "On" ; rdf:value 1 ] ;
+            lv2:default 1 ;
+            lv2:minimum 0 ;
+            lv2:maximum 1 ;
+        ] ,
+        [
+            a lv2:InputPort , lv2:ControlPort ;
+            lv2:index 25 ;
             lv2:symbol "voice_mode" ;
             lv2:name "Voice Mode" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;
@@ -283,7 +295,7 @@
         ] ,
         [
             a lv2:InputPort , lv2:ControlPort ;
-            lv2:index 25 ;
+            lv2:index 26 ;
             lv2:symbol "portamento" ;
             lv2:name "Portamento" ;
             lv2:default 1 ;
@@ -292,7 +304,7 @@
         ] ,
         [
             a lv2:InputPort , lv2:ControlPort ;
-            lv2:index 26 ;
+            lv2:index 27 ;
             lv2:symbol "legato" ;
             lv2:name "Legato" ;
             lv2:portProperty lv2:integer , lv2:enumeration ;

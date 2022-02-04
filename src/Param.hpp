@@ -29,13 +29,14 @@ enum Param
     P_WAVEFORM_2 = 19,
     P_LEVEL_2    = 20,
     P_PITCH_2    = 21,
+    P_KEYTRACK_2 = 22,
 
-    P_VOICE_MODE = 22,
-    P_PORTAMENTO = 23,
+    P_VOICE_MODE = 23,
+    P_PORTAMENTO = 24,
 
-    P_LEGATO = 24,
+    P_LEGATO = 25,
 
-    P_NUM_CONTROLS = 25
+    P_NUM_CONTROLS = 26
 };
 
 constexpr std::array<std::pair<float, float>, P_NUM_CONTROLS> PARAM_LIMIT =
@@ -66,6 +67,7 @@ constexpr std::array<std::pair<float, float>, P_NUM_CONTROLS> PARAM_LIMIT =
     {0.0f, 4.0f},           // WAVEFORM 2
     {0.0f, 1.0f},           // LEVEL 2
     {-48.0f, 24.0f},        // PITCH 2
+    {0.0f, 1.0f},           // KEYTRACK 2
 
     {0.0f, 2.0f},           // VOICE MODE
     {1.00f, 100.0f},        // PORTAMENTO
@@ -101,6 +103,7 @@ constexpr std::array<float, P_NUM_CONTROLS> PARAM_DEFAULT =
     2,           // WAVEFORM 2
     .1,           // LEVEL 2
     -12,        // PITCH 2
+    1,        // KEYTRACK 2
 
     0,           // VOICE MODE
     1,        // PORTAMENTO
@@ -135,6 +138,7 @@ const char* PARAM_NAME[P_NUM_CONTROLS] = {
     "Waveform2",
     "Level2",
     "Pitch2",
+    "Keytrack2",
 
     "VoiceMode",
     "Portamento",

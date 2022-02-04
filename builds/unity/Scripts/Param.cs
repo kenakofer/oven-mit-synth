@@ -31,6 +31,7 @@ namespace OvenMit
             P_WAVEFORM_2,
             P_LEVEL_2,
             P_PITCH_2,
+            P_KEYTRACK_2,
 
             P_VOICE_MODE,
             P_PORTAMENTO,
@@ -62,6 +63,7 @@ namespace OvenMit
             "waveform2",
             "level2",
             "pitch2",
+            "keytrack2",
             "voice_mode",
             "portamento",
             "legato"
