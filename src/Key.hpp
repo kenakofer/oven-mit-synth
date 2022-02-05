@@ -340,8 +340,9 @@ inline void Key::proceed ()
     if (controls->get(P_WAVEFORM_2_MODE) == OSC_FM_1) {
         modfreq1 *= 1 + synth2();
     }
-    // Move Osc 1 forward correctly
+    // Move Osc 1 forward correctly. Hold it between 0 and 1
     position += modfreq1 / rate;
+    position = position - (int)position;
 
     // Calculate instantaneous frequncy for osc 2
     modfreq2 = freq2;
@@ -351,8 +352,9 @@ inline void Key::proceed ()
     if (controls->get(P_ENV_MODE_2) == ENV_PITCH_2) {
         modfreq2 *= pow (2.0, adsr(2) * controls->get(P_ENV_AMT_2) * 4 / 12.0); // Scale by 4 so it covers more
     }
-    // Move Osc 2 forward correctly
+    // Move Osc 2 forward correctly. Hold it between 0 and 1
     position2 += modfreq2 / rate;
+    position2 = position2 - (int)position2;
 
     if ((status == KEY_RELEASED) &&
             (time >= controls->get(P_RELEASE)) && // Wait for envelope 1 to finish releasing regardless
