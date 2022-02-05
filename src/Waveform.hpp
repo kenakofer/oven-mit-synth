@@ -39,7 +39,7 @@ enum Waveform
 //     }
 // }
 
-const float NYQUIST_FREQ = 21000; // Even at higher framerates, no sense generating beyond hearing range
+const float NYQUIST_FREQ = 22050; // Half of 44100
 
 inline float valueFromCacheIndex(Waveform waveform, float partial_index, int i) {
     if (partial_index >= CACHE_PARTIALS-1) partial_index = CACHE_PARTIALS - 1 - 0.01f;
