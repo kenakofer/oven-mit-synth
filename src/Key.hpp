@@ -53,8 +53,6 @@ private:
     float adsr (int whichOscillator);
     float synth ();
     float synthPartials ();
-    void setCachedValue(double pos, float val);
-    float getCachedValue(double pos);
     float synth2();
 };
 
