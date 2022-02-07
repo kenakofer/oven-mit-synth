@@ -11,5 +11,8 @@ nix:
 clean:
 	rm -f $(OBJS)
 
-win:
-	make -f makefile.win
+win32:
+	make -f makefile.win32
+
+win64:
+	make -f makefile.win64
