@@ -338,9 +338,8 @@ inline void Key::proceed ()
     if (controls->get(P_WAVEFORM_2_MODE) == OSC_FM_1) {
         modfreq1 *= 1 + synth2();
     }
-    // Move Osc 1 forward correctly. Hold it between 0 and 1
+    // Move Osc 1 forward correctly.
     position += modfreq1 / rate;
-    position = position - (int)position;
 
     // Calculate instantaneous frequncy for osc 2
     modfreq2 = freq2;
@@ -352,7 +351,13 @@ inline void Key::proceed ()
     }
     // Move Osc 2 forward correctly. Hold it between 0 and 1
     position2 += modfreq2 / rate;
-    position2 = position2 - (int)position2;
+
+    // Hold positions between 0 and 1 if we're doing noise (not harmonic/periodic)
+    // By doing this, we prevent decreasing the precision of position and
+    // position2 after the decimal point, which adds aliasing if notes are held
+    // for a bit.
+    if (controls->get(P_WAVEFORM) != WAVEFORM_NOISE) position = position - (int)position;
+    if (controls->get(P_WAVEFORM_2) != WAVEFORM_NOISE) position2 = position2 - (int)position2;
 
     if ((status == KEY_RELEASED) &&
             (time >= controls->get(P_RELEASE)) && // Wait for envelope 1 to finish releasing regardless
