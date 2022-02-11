@@ -80,7 +80,7 @@ inline Key::Key (const double rt) :
 
 }
 
-inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool refreq=true)
+inline void Key::press (const uint8_t nt, uint8_t vel, Controls *c, bool refreq=true)
 {
     note = nt;
     controls = c;
@@ -123,6 +123,7 @@ inline void Key::press (const uint8_t nt, const uint8_t vel, Controls *c, bool r
         } else {
             // Key has been released, but may still be lingering.
             // Start at the key's prior start_level, then reset time
+            if (vel < 1) vel = 1;
             start_level_1 = adsr(1) * velocity / vel;
             start_level_2 = adsr(2) * velocity / vel;
             time = 0.0;
