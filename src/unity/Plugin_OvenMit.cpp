@@ -45,18 +45,21 @@ namespace OvenMit
         // std::cout << "GetOvenMitInstance with index..." << index << std::endl;
         static bool initialized[MAX_INSTANCES] = { false };
         static OvenMitInstance instance[MAX_INSTANCES];
-        if (index < 0 || index >= MAX_INSTANCES)
+        if (index < 0 || index >= MAX_INSTANCES) {
+            std::cout << "OvenMit Error: Can't fetch index: " << index << " Because the max is " << MAX_INSTANCES << std::endl;
             return NULL;
+        }
         if (!initialized[index])
         {
+            std::cout << "OvenMit: Instantiating new instance on demand: " << index << std::endl;
             initialized[index] = true;
             instance[index].synth = Synth(44100);
             // Control values are all 0 to start (no sound except a small click on note start), so set the defaults
             for (int p=0; p<P_NUM_CONTROLS; p++) {
                 instance[index].synth.setControl(p, PARAM_DEFAULT[p]);
             }
+            std::cout << "    ...finished" << std::endl;
         }
-        // std::cout << "    ...finished" << std::endl;
         return &instance[index];
     }
 
@@ -74,7 +77,9 @@ namespace OvenMit
     void globalProcess(UnityAudioEffectState* state) {
         global_beat += (state->currdsptick - global_sample) / global_samples_per_beat;
         global_sample = state->currdsptick;
-        // std::cout << "Running globalProcess by instance# " << state->GetEffectData<EffectData>()->parameters[INSTANCE_INDEX] << std::endl;
+        std::cout << "OvenMit: Running globalProcess by instance# " << state->GetEffectData<EffectData>()->parameters[INSTANCE_INDEX] << std::endl;
+        std::cout << "Global sample: " << global_sample << std::endl;
+        std::cout << "Global beat: " << global_beat << std::endl;
     }
 
     // May not be accurate after tempo changes, but when used within the time of a buffer it will be fine.
@@ -93,8 +98,10 @@ namespace OvenMit
 
         // std::cout << "ProcessCallback..." << std::endl;
         EffectData* data = state->GetEffectData<EffectData>();
+        std::cout << "OvenMit: ProcessCallback for synth: " << data->parameters[INSTANCE_INDEX] << std::endl;
         OvenMitInstance* instance = GetOvenMitInstance(data->parameters[INSTANCE_INDEX]);
         Synth* synth = &instance->synth;
+
 
         UInt64 tick = global_sample; // Global time in samples plus frames within this buffer
         // std::cout << "  ...starting buffer at tick: " << tick << std::endl;
@@ -139,7 +146,7 @@ namespace OvenMit
             tick += framesToNext;
         }
 
-        // std::cout << "...finished" << std::endl;
+        std::cout << "...finished" << std::endl;
         return UNITY_AUDIODSP_OK;
     }
 
@@ -153,10 +160,13 @@ namespace OvenMit
      * This code is loaded into memory once when Unity loads, but CreateCallback
      * is called for every OvenMitSynth on every replay, so the static instance
      * counting doesn't work.
+     *
+     * [Later edit] This code is NOT called again on stopping and playing the
+     * game within Unity. The first play calls it for every synth, then no more.
      */
     UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK CreateCallback(UnityAudioEffectState* state)
     {
-        std::cout << "CreateCallback..." << std::endl;
+        std::cout << "OvenMit: CreateCallback..." << std::endl;
         EffectData* effectdata = new EffectData;
         memset(effectdata, 0, sizeof(EffectData));
         state->effectdata = effectdata;
@@ -213,11 +223,14 @@ namespace OvenMit
     }
 
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetSynthParameter(int instance_index, int parameter_index, float value) {
+        std::cout << "OvenMit_SetSynthParameter, instance" << instance_index << " param " << parameter_index << " to " << value << std::endl;
         OvenMitInstance* instance = GetOvenMitInstance(instance_index);
         instance->synth.setControl(parameter_index, value);
+        std::cout << "   ...finished." << std::endl;
     }
 
     extern "C" UNITY_AUDIODSP_EXPORT_API double OvenMit_GetGlobalBeat() {
+        std::cout << "OvenMit_GetGlobalBeat (finished)" << std::endl;
         return global_beat;
     }
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetGlobalSamplesPerBeat(double samples_per_beat) {
@@ -231,7 +244,7 @@ namespace OvenMit
 
     UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK ReleaseCallback(UnityAudioEffectState* state)
     {
-        std::cout << "Other OvenMit function..." << std::endl;
+        std::cout << "OvenMit: ReleaseCallback OvenMit function..." << std::endl;
         EffectData* data = state->GetEffectData<EffectData>();
         delete data;
         std::cout << "...finished" << std::endl;
@@ -241,8 +254,8 @@ namespace OvenMit
     UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK SetFloatParameterCallback(UnityAudioEffectState* state, int index, float value)
     {
         EffectData* data = state->GetEffectData<EffectData>();
+        std::cout << "OvenMit: SetFloatParameterCallback on instance... " << (int)data->parameters[INSTANCE_INDEX] << " param index " << index << " to " << value << std::endl;
         OvenMitInstance* instance = GetOvenMitInstance(data->parameters[INSTANCE_INDEX]);;
-        std::cout << "SetFloatParameterCallback on instance... " << (int)data->parameters[INSTANCE_INDEX] << " param index " << index << " to " << value << std::endl;
         if (index >= UNITY_PARAM_NUM)
             return UNITY_AUDIODSP_ERR_UNSUPPORTED;
         data->parameters[index] = value;
@@ -252,7 +265,7 @@ namespace OvenMit
 
     UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK GetFloatParameterCallback(UnityAudioEffectState* state, int index, float* value, char *valuestr)
     {
-        std::cout << "Other OvenMit function..." << std::endl;
+        std::cout << "OvenMit: GetFloatParameterCallback OvenMit function..." << std::endl;
         EffectData* data = state->GetEffectData<EffectData>();
         if (index >= UNITY_PARAM_NUM)
             return UNITY_AUDIODSP_ERR_UNSUPPORTED;
@@ -266,6 +279,7 @@ namespace OvenMit
 
     int UNITY_AUDIODSP_CALLBACK GetFloatBufferCallback(UnityAudioEffectState* state, const char* name, float* buffer, int numsamples)
     {
+        std::cout << "OvenMit: GetFloatBufferCallback (finished)" << std::endl;
         return UNITY_AUDIODSP_OK;
     }
 }
