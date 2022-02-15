@@ -231,6 +231,12 @@ namespace OvenMit
         instance->synth.setControl(parameter_index, value);
         std::cout << "   ...finished." << std::endl;
     }
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetSynthPan(int instance_index, float pan, int outchannels=2) {
+        std::cout << "OvenMit_SetPan for instance " << instance_index << " to " << pan << std::endl;
+        OvenMitInstance* instance = GetOvenMitInstance(instance_index);
+        instance->synth.setPanningFactors(pan, outchannels);
+        std::cout << "   ...finished." << std::endl;
+    }
 
     extern "C" UNITY_AUDIODSP_EXPORT_API double OvenMit_GetGlobalBeat() {
         std::cout << "OvenMit_GetGlobalBeat (finished)" << std::endl;

@@ -32,6 +32,9 @@ namespace OvenMit
         public static extern void OvenMit_SetSynthParameter(int instance, int parameterIndex, float value);
 
         [DllImport("OvenMit")]
+        public static extern void OvenMit_SetSynthPan(int instance_index, float pan, int outchannels);
+
+        [DllImport("OvenMit")]
         public static extern double OvenMit_GetGlobalBeat();
 
         [DllImport("OvenMit")]

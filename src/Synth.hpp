@@ -17,6 +17,8 @@
 
 static double rate = 44100;
 
+static const int MAX_CHANNELS = 2;
+
 /* class definiton */
 class Synth
 {
@@ -26,6 +28,7 @@ private:
     Key monoKey;
     Key* monoKeyTarget;
     Controls controls;
+    float panning_factors[MAX_CHANNELS];
 
 public:
     Synth () :
@@ -37,10 +40,16 @@ public:
         keys ()
     {
         controls = Controls(sample_rate);
+        setPanningFactors(.5, 1); // Panning factors for centered sound.
     }
 
     inline void outputSamples(float* audio_out_ptr, const uint32_t start, const uint32_t end, const int outchannels=1)
     {
+        if (outchannels > MAX_CHANNELS) {
+            std::cerr << "outchannels is " << outchannels << " but must be less than " << MAX_CHANNELS << std::endl;
+            throw std::invalid_argument ("outchannels is greater than MAX_CHANNELS!");
+        }
+
         for (uint32_t i = start; i < end; ++i)
         {
             // Reset the outs to 0 since it may still have data from last time
@@ -75,6 +84,11 @@ public:
                     // Proceed just the one key
                     monoKey.proceed();
                 }
+            }
+
+            // Pan with precalculated panning_factors (see setPanningFactors)
+            for (int j=0; j<outchannels; j++) {
+                audio_out_ptr[i*outchannels+j] *= panning_factors[j];
             }
         }
     }
@@ -160,5 +174,21 @@ public:
             k->mute();
         }
         monoKey.mute();
+    }
+
+    inline void setPanningFactors(float pan, int channel_number) {
+        switch (channel_number) {
+        case 1:
+            panning_factors[0] = 1.0f - fabs(pan - .5);
+            panning_factors[1] = 1.0f - fabs(pan - .5); // This value probably won't get used, but just in case...
+            break;
+        case 2:
+            // Linear panning law with x2 so centered sound is similar volume between mono and stereo
+            panning_factors[0] = 2 * (1.0f - pan);
+            panning_factors[1] = 2 * pan;
+            break;
+        }
+
+        return;
     }
 };
