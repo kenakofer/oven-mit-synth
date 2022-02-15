@@ -36,6 +36,7 @@ namespace OvenMit
 
         [DllImport("OvenMit")]
         public static extern void OvenMit_SetGlobalSamplesPerBeat(double samplesPerBeat);
-
+        [DllImport("OvenMit")]
+        public static extern void OvenMit_ResetPlugin();
     }
 }

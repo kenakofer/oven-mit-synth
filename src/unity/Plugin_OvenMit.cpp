@@ -15,6 +15,7 @@ namespace OvenMit
     static double global_samples_per_beat = 22100; // Default value: 120 bpm at 44.1 khz. Can be changed whenever by API calls.
     static double global_beat = 0.0;    // Beat is tracked additively based on increases in the sample divided by global_samples_per_beat
     static UInt64 global_sample = 0;    // This is simply copied from state->currdsptick. We only keep track of it as a convenient flag for if we need to run the global update.
+    static bool initialized[MAX_INSTANCES] = { false };
 
     // This parameter is just for the instance of the AudioEffect that's
     // attached to an audio bus in the Unity Editor, which shouldn't be confused
@@ -43,7 +44,6 @@ namespace OvenMit
     inline OvenMitInstance* GetOvenMitInstance(int index)
     {
         // std::cout << "GetOvenMitInstance with index..." << index << std::endl;
-        static bool initialized[MAX_INSTANCES] = { false };
         static OvenMitInstance instance[MAX_INSTANCES];
         if (index < 0 || index >= MAX_INSTANCES) {
             std::cout << "OvenMit Error: Can't fetch index: " << index << " Because the max is " << MAX_INSTANCES << std::endl;
@@ -54,6 +54,10 @@ namespace OvenMit
             std::cout << "OvenMit: Instantiating new instance on demand: " << index << std::endl;
             initialized[index] = true;
             instance[index].synth = Synth(44100);
+
+            // Make sure the queue is empty, e.g. if OvenMit_ResetPlugin was called.
+            while (!instance[index].note_event_queue.empty()) instance[index].note_event_queue.pop();
+
             // Control values are all 0 to start (no sound except a small click on note start), so set the defaults
             for (int p=0; p<P_NUM_CONTROLS; p++) {
                 instance[index].synth.setControl(p, PARAM_DEFAULT[p]);
@@ -234,7 +238,14 @@ namespace OvenMit
         return global_beat;
     }
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetGlobalSamplesPerBeat(double samples_per_beat) {
+        std::cout << "OvenMit_SetGlobalSamplesPerBeat (finished)" << samples_per_beat << std::endl;
         global_samples_per_beat = samples_per_beat;
+    }
+
+    /* Force all instances to be reloaded from scratch, including event queues. */
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_ResetPlugin() {
+        std::cout << "OvenMit_ResetPlugin (finished)" << std::endl;
+        for (int i=0; i<MAX_INSTANCES; i++) initialized[i] = false;
     }
 
 
