@@ -81,9 +81,9 @@ namespace OvenMit
     void globalProcess(UnityAudioEffectState* state) {
         global_beat += (state->currdsptick - global_sample) / global_samples_per_beat;
         global_sample = state->currdsptick;
-        std::cout << "OvenMit: Running globalProcess by instance# " << state->GetEffectData<EffectData>()->parameters[INSTANCE_INDEX] << std::endl;
-        std::cout << "Global sample: " << global_sample << std::endl;
-        std::cout << "Global beat: " << global_beat << std::endl;
+        // std::cout << "OvenMit: Running globalProcess by instance# " << state->GetEffectData<EffectData>()->parameters[INSTANCE_INDEX] << std::endl;
+        // std::cout << "Global sample: " << global_sample << std::endl;
+        // std::cout << "Global beat: " << global_beat << std::endl;
     }
 
     // May not be accurate after tempo changes, but when used within the time of a buffer it will be fine.
@@ -100,9 +100,8 @@ namespace OvenMit
             globalProcess(state);
         }
 
-        // std::cout << "ProcessCallback..." << std::endl;
         EffectData* data = state->GetEffectData<EffectData>();
-        std::cout << "OvenMit: ProcessCallback for synth: " << data->parameters[INSTANCE_INDEX] << std::endl;
+        // std::cout << "OvenMit: ProcessCallback for synth: " << data->parameters[INSTANCE_INDEX] << std::endl;
         OvenMitInstance* instance = GetOvenMitInstance(data->parameters[INSTANCE_INDEX]);
         Synth* synth = &instance->synth;
 
@@ -150,7 +149,7 @@ namespace OvenMit
             tick += framesToNext;
         }
 
-        std::cout << "...finished" << std::endl;
+        // std::cout << "...finished" << std::endl;
         return UNITY_AUDIODSP_OK;
     }
 
