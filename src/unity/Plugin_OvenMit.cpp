@@ -1,5 +1,6 @@
 #include <iostream>
 #include <limits.h>
+#include <map>
 
 #include "AudioPluginUtil.h"
 #include "../Synth.hpp"
@@ -9,7 +10,9 @@
 namespace OvenMit
 {
     const int MAX_KEYS = 1;
-    const int MAX_INSTANCES = 32;
+    const int FIXED_INSTANCES = 32;
+    const int TEMP_INSTANCES = 8; // For temporary allocation for SFX, all accessed through
+    const int TEMP_INSTANCES_SINK = FIXED_INSTANCES; // The sink index for all temp instances through is one more than the
 
     // These are shared across instances, and help us do global logic exactly once per buffer.
     static double global_samples_per_beat = 22100; // Default value: 120 bpm at 44.1 khz. Can be changed whenever by API calls.
@@ -39,14 +42,16 @@ namespace OvenMit
         // TODO we should use a better data structure that's indexed by both time and
         // note, (basically a variation of KeyMap with more intelligent insert)
         std::priority_queue<NoteEvent, std::vector<NoteEvent>, PrioritizeEarlierTime> note_event_queue;
+
+        double needed_until_beat = -1.0; // When the last noteEvent (probably a release) occurs. Only needed for temp instances
     };
+    static OvenMitInstance instance[FIXED_INSTANCES + TEMP_INSTANCES]; // Statically stores the array of all instances, both fixed and temp
 
     inline OvenMitInstance* GetOvenMitInstance(int index)
     {
         // std::cout << "GetOvenMitInstance with index..." << index << std::endl;
-        static OvenMitInstance instance[MAX_INSTANCES];
-        if (index < 0 || index >= MAX_INSTANCES) {
-            std::cout << "OvenMit Error: Can't fetch index: " << index << " Because the max is " << MAX_INSTANCES << std::endl;
+        if (index < 0 || index >= FIXED_INSTANCES + TEMP_INSTANCES) {
+            std::cout << "OvenMit Error: Can't fetch index: " << index << " Because the max is " << FIXED_INSTANCES << std::endl;
             return NULL;
         }
         if (!initialized[index])
@@ -67,11 +72,37 @@ namespace OvenMit
         return &instance[index];
     }
 
+    // These structs should be fetchable either by a temporary key through keyToTempSynthIndex, or by popping from the temp_synth_index_queue;
+    static std::map<int, int> key_to_temp_synth_index; // We'll expire these keys when the synth gets reassigned, so c# code can't keep changing the synth later
+    static int nextDynKey = 0; // Counts upward
+    struct PrioritizeEarlierNeededUntilBeat {
+        bool operator()(int const& v1, int const& v2) {
+            // Temp synths needed for longer to end of queue.
+            return instance[v1].needed_until_beat > instance[v2].needed_until_beat;
+        }
+    };
+    // Store the TempSynthRecords here, sorted so one can be popped off the front easily.
+    static std::priority_queue<int, std::vector<int>, PrioritizeEarlierNeededUntilBeat> temp_synth_index_queue;
+
+    inline void initializeTempSynthIndexQueue() {
+        for (int i=FIXED_INSTANCES; i<FIXED_INSTANCES+TEMP_INSTANCES; i++) {
+            temp_synth_index_queue.push(i); // Fill it up the temp synth indices.
+        }
+    }
+
+    inline OvenMitInstance* GetNewTempOvenMitInstance() {
+        if (temp_synth_index_queue.empty()) {
+            initializeTempSynthIndexQueue();
+        }
+        int dyn_synth_index = temp_synth_index_queue.top(); // Get the synth at the top of the queue
+        return GetOvenMitInstance(dyn_synth_index); // Initializes the values if they haven't been
+    }
+
     int InternalRegisterEffectDefinition(UnityAudioEffectDefinition& definition)
     {
         std::cout << "OvenMit: InternalRegisterEffectDefinition..." << std::endl;
         definition.paramdefs = new UnityAudioParameterDefinition[UNITY_PARAM_NUM];
-        RegisterParameter( definition, "Synth Instance", "", 0, MAX_INSTANCES-1, 0, 1.0f, 1.0f, 0,
+        RegisterParameter( definition, "Synth Instance", "", 0, FIXED_INSTANCES-1, 0, 1.0f, 1.0f, 0,
             "Which native instance of OvenMit should this audio bus receive audio data from?"
         );
         std::cout << "...finished" << std::endl;
@@ -250,7 +281,7 @@ namespace OvenMit
     /* Force all instances to be reloaded from scratch, including event queues. */
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_ResetPlugin() {
         std::cout << "OvenMit_ResetPlugin (finished)" << std::endl;
-        for (int i=0; i<MAX_INSTANCES; i++) initialized[i] = false;
+        for (int i=0; i<FIXED_INSTANCES; i++) initialized[i] = false;
     }
 
 
