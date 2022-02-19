@@ -29,6 +29,7 @@ private:
     Key* monoKeyTarget;
     Controls controls;
     float panning_factors[MAX_CHANNELS];
+    bool idle;
 
 public:
     Synth () :
@@ -43,17 +44,18 @@ public:
         setPanningFactors(.5, 1); // Panning factors for centered sound.
     }
 
-    inline void outputSamples(float* audio_out_ptr, const uint32_t start, const uint32_t end, const int outchannels=1)
+    inline void outputSamples(float* audio_out_ptr, const uint32_t start, const uint32_t end, const int outchannels=1, const bool reset_output=true)
     {
         if (outchannels > MAX_CHANNELS) {
             std::cerr << "outchannels is " << outchannels << " but must be less than " << MAX_CHANNELS << std::endl;
             throw std::invalid_argument ("outchannels is greater than MAX_CHANNELS!");
         }
 
+        idle = true; // Set to false in these loops if a key is run.
         for (uint32_t i = start; i < end; ++i)
         {
-            // Reset the outs to 0 since it may still have data from last time
-            for (int j=0; j<outchannels; j++) {
+            // Conditionally reset the outs to 0 since it may still have data from last time
+            if (reset_output) for (int j=0; j<outchannels; j++) {
                 audio_out_ptr[i*outchannels+j] = 0.0f;
             }
 
@@ -63,6 +65,7 @@ public:
                 Key* k;
                 while (k = keys.getNext()) {
                     if (k->isOn()) {
+                        idle = false;
                         const float outvalue = k->get();
                         // Add to pointer
                         for (int j=0; j<outchannels; j++) {
@@ -76,6 +79,7 @@ public:
                 }
             } else {
                 if (monoKey.isOn()) {
+                    idle = false;
                     const float outvalue = monoKey.get();
                     // Output to pointer
                     for (int j=0; j<outchannels; j++) {
@@ -98,6 +102,7 @@ public:
     }
 
     inline void startNote(const int note, const int velocity) {
+        idle = false;
         keys.getKey(note & 0x7f)->press(
             note,
             velocity,
@@ -190,5 +195,9 @@ public:
         }
 
         return;
+    }
+
+    inline bool isIdle() {
+        return idle;
     }
 };

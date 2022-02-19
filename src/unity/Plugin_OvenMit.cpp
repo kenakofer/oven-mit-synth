@@ -11,14 +11,14 @@ namespace OvenMit
 {
     const int MAX_KEYS = 1;
     const int FIXED_INSTANCES = 32;
-    const int TEMP_INSTANCES = 8; // For temporary allocation for SFX, all accessed through
+    const int TEMP_INSTANCES = 4; // For temporary allocation for SFX, all accessed through
     const int TEMP_INSTANCES_SINK = FIXED_INSTANCES; // The sink index for all temp instances through is one more than the
 
     // These are shared across instances, and help us do global logic exactly once per buffer.
     static double global_samples_per_beat = 22100; // Default value: 120 bpm at 44.1 khz. Can be changed whenever by API calls.
     static double global_beat = 0.0;    // Beat is tracked additively based on increases in the sample divided by global_samples_per_beat
     static UInt64 global_sample = 0;    // This is simply copied from state->currdsptick. We only keep track of it as a convenient flag for if we need to run the global update.
-    static bool initialized[MAX_INSTANCES] = { false };
+    static bool initialized[FIXED_INSTANCES+TEMP_INSTANCES] = { false };
 
     // This parameter is just for the instance of the AudioEffect that's
     // attached to an audio bus in the Unity Editor, which shouldn't be confused
@@ -44,7 +44,9 @@ namespace OvenMit
         std::priority_queue<NoteEvent, std::vector<NoteEvent>, PrioritizeEarlierTime> note_event_queue;
 
         double needed_until_beat = -1.0; // When the last noteEvent (probably a release) occurs. Only needed for temp instances
+        int temp_key; // For temp instances, the key temporarily used to access this.
     };
+
     static OvenMitInstance instance[FIXED_INSTANCES + TEMP_INSTANCES]; // Statically stores the array of all instances, both fixed and temp
 
     inline OvenMitInstance* GetOvenMitInstance(int index)
@@ -74,7 +76,6 @@ namespace OvenMit
 
     // These structs should be fetchable either by a temporary key through keyToTempSynthIndex, or by popping from the temp_synth_index_queue;
     static std::map<int, int> key_to_temp_synth_index; // We'll expire these keys when the synth gets reassigned, so c# code can't keep changing the synth later
-    static int nextDynKey = 0; // Counts upward
     struct PrioritizeEarlierNeededUntilBeat {
         bool operator()(int const& v1, int const& v2) {
             // Temp synths needed for longer to end of queue.
@@ -90,12 +91,28 @@ namespace OvenMit
         }
     }
 
-    inline OvenMitInstance* GetNewTempOvenMitInstance() {
+    static int next_temp_key = 0; // Counts upward
+    inline int GetNewTempOvenMitInstanceKey(double needed_until_beat) {
+        next_temp_key++;
         if (temp_synth_index_queue.empty()) {
             initializeTempSynthIndexQueue();
         }
-        int dyn_synth_index = temp_synth_index_queue.top(); // Get the synth at the top of the queue
-        return GetOvenMitInstance(dyn_synth_index); // Initializes the values if they haven't been
+
+        // Get the instance
+        const int temp_synth_index = temp_synth_index_queue.top(); // Get the synth at the top of the queue
+        OvenMitInstance* instance =  GetOvenMitInstance(temp_synth_index); // Initializes the values if they haven't been
+        instance->needed_until_beat = needed_until_beat;
+
+        // Change the keys
+        auto entry = key_to_temp_synth_index.find(instance->temp_key);
+        if (entry != end(key_to_temp_synth_index)) key_to_temp_synth_index.erase(entry); // Invalidate the old key
+        instance->temp_key = next_temp_key; // Set the new key on the instance
+        key_to_temp_synth_index.insert({instance->temp_key, temp_synth_index}); // Set the new key in the lookup
+
+        // Reorder the queue now that the sorting will have changed
+        temp_synth_index_queue.pop();
+        temp_synth_index_queue.push(temp_synth_index);
+        return next_temp_key;
     }
 
     int InternalRegisterEffectDefinition(UnityAudioEffectDefinition& definition)
@@ -122,20 +139,8 @@ namespace OvenMit
         return global_sample + (long)(global_samples_per_beat * (beat - global_beat));
     }
 
-    UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK ProcessCallback(UnityAudioEffectState* state, float* inbuffer, float* outbuffer, unsigned int length, int inchannels, int outchannels)
-    {
-        // TODO find a way for this method to work when two audioeffects share the same synth index
-
-        // Run the globalProcess only once, no matter if we have 1 or 32 synths
-        if (global_sample != state->currdsptick) {
-            globalProcess(state);
-        }
-
-        EffectData* data = state->GetEffectData<EffectData>();
-        // std::cout << "OvenMit: ProcessCallback for synth: " << data->parameters[INSTANCE_INDEX] << std::endl;
-        OvenMitInstance* instance = GetOvenMitInstance(data->parameters[INSTANCE_INDEX]);
+    void addInstanceSamplesToPointer(OvenMitInstance* instance, float* outbuffer, unsigned int length, int outchannels) {
         Synth* synth = &instance->synth;
-
 
         UInt64 tick = global_sample; // Global time in samples plus frames within this buffer
         // std::cout << "  ...starting buffer at tick: " << tick << std::endl;
@@ -174,14 +179,14 @@ namespace OvenMit
 
             // Synthesizer does MAGIC to compute samples
             // std::cout << "...outputSamples from " << frame << " to " << frame+framesToNext << std::endl;
-            synth->outputSamples(outbuffer, frame, frame+framesToNext, outchannels);
+
+            if (!synth->isIdle()) synth->outputSamples(outbuffer, frame, frame+framesToNext, outchannels, false); // No need to reset the output buffer, did it up top
 
             frame += framesToNext;
             tick += framesToNext;
         }
 
         // std::cout << "...finished" << std::endl;
-        return UNITY_AUDIODSP_OK;
     }
 
     /* I think the initial state is in the default state, NOT in the state of the
@@ -208,6 +213,35 @@ namespace OvenMit
         // The instance index is assigned based on the next available based on instance_count.
         InitParametersFromDefinitions(InternalRegisterEffectDefinition, effectdata->parameters);
         std::cout << "  ...finished" << std::endl;
+        return UNITY_AUDIODSP_OK;
+    }
+
+    UNITY_AUDIODSP_RESULT UNITY_AUDIODSP_CALLBACK ProcessCallback(UnityAudioEffectState* state, float* inbuffer, float* outbuffer, unsigned int length, int inchannels, int outchannels)
+    {
+        // TODO find a way for this method to work when two audioeffects share the same synth index
+
+        // Run the globalProcess only once, no matter if we have 1 or 32 synths
+        if (global_sample != state->currdsptick) {
+            globalProcess(state);
+        }
+
+        // Reset the output buffer
+        for (int i = 0; i < length*outchannels; ++i) {
+            outbuffer[i] = 0.0f;
+        }
+
+        int synthIndex = state->GetEffectData<EffectData>()->parameters[INSTANCE_INDEX];
+        if (synthIndex >= TEMP_INSTANCES_SINK) {
+            // Output all the temp instances into this one effect sink
+            for (int i=FIXED_INSTANCES; i<FIXED_INSTANCES+TEMP_INSTANCES; i++) {
+                OvenMitInstance* instance = GetOvenMitInstance(i); // Don't need to access through GetNewTempOvenMitInstance because we don't want to assign one if it doesn't exist
+                addInstanceSamplesToPointer(instance, outbuffer, length, outchannels);
+            }
+        } else {
+            // Simply output the corresponding instance into its sink
+            OvenMitInstance* instance = GetOvenMitInstance(synthIndex);
+            addInstanceSamplesToPointer(instance, outbuffer, length, outchannels);
+        }
         return UNITY_AUDIODSP_OK;
     }
 
@@ -255,12 +289,46 @@ namespace OvenMit
         instance->note_event_queue.push(NoteEvent(NoteRelease, endbeat, instance_index, midiNote, velocity));
         std::cout << "   ...finished." << std::endl;
     }
+    extern "C" UNITY_AUDIODSP_EXPORT_API bool OvenMit_ScheduleTempNote(int instance_key, int midiNote, int velocity, double startbeat, double endbeat) {
+        std::cout << "OvenMit_ScheduleTempNote..." << std::endl;
+        if (startbeat >= endbeat) endbeat = startbeat + 0.0001; // Don't allow 0 or negative width notes
+        // Check the key provided
+        auto it = key_to_temp_synth_index.find(instance_key);
+        if (it == key_to_temp_synth_index.end()) return false; // The key used is invalid or expired
+
+        OvenMit_ScheduleNote(it->second, midiNote, velocity, startbeat, endbeat);
+
+        // TODO would be nice to change in priority queue to endbeat
+        return true;
+    }
 
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetSynthParameter(int instance_index, int parameter_index, float value) {
         std::cout << "OvenMit_SetSynthParameter, instance" << instance_index << " param " << parameter_index << " to " << value << std::endl;
         OvenMitInstance* instance = GetOvenMitInstance(instance_index);
         instance->synth.setControl(parameter_index, value);
         std::cout << "   ...finished." << std::endl;
+    }
+    extern "C" UNITY_AUDIODSP_EXPORT_API bool OvenMit_GetTempSynthKey(double needed_until_beat) {
+        std::cout << "OvenMit_GetTempSynthKey(), needed_until_beat " << needed_until_beat << std::endl;
+
+        // Call the existing function
+        int key = GetNewTempOvenMitInstanceKey(needed_until_beat);
+
+        std::cout << "   ...finished." << std::endl;
+        return key;
+    }
+    extern "C" UNITY_AUDIODSP_EXPORT_API bool OvenMit_SetTempSynthParameter(int instance_key, int parameter_index, float value) {
+        std::cout << "OvenMit_SetTempSynthParameter, instance_key " << instance_key << " param " << parameter_index << " to " << value << std::endl;
+
+        // Check the key provided
+        auto it = key_to_temp_synth_index.find(instance_key);
+        if (it == key_to_temp_synth_index.end()) return false; // The key used is invalid or expired
+
+        // Call the existing function
+        OvenMit_SetSynthParameter(it->second, parameter_index, value);
+
+        std::cout << "   ...finished." << std::endl;
+        return true;
     }
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetSynthPan(int instance_index, float pan, int outchannels=2) {
         std::cout << "OvenMit_SetPan for instance " << instance_index << " to " << pan << std::endl;
@@ -302,7 +370,6 @@ namespace OvenMit
     {
         EffectData* data = state->GetEffectData<EffectData>();
         std::cout << "OvenMit: SetFloatParameterCallback on instance... " << (int)data->parameters[INSTANCE_INDEX] << " param index " << index << " to " << value << std::endl;
-        OvenMitInstance* instance = GetOvenMitInstance(data->parameters[INSTANCE_INDEX]);;
         if (index >= UNITY_PARAM_NUM)
             return UNITY_AUDIODSP_ERR_UNSUPPORTED;
         data->parameters[index] = value;
