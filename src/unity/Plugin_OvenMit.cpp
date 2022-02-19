@@ -11,7 +11,7 @@ namespace OvenMit
 {
     const int MAX_KEYS = 1;
     const int FIXED_INSTANCES = 32;
-    const int TEMP_INSTANCES = 4; // For temporary allocation for SFX, all accessed through
+    const int TEMP_INSTANCES = 16; // For temporary allocation for SFX, all accessed through
     const int TEMP_INSTANCES_SINK = FIXED_INSTANCES; // The sink index for all temp instances through is one more than the
 
     // These are shared across instances, and help us do global logic exactly once per buffer.
@@ -44,7 +44,7 @@ namespace OvenMit
         std::priority_queue<NoteEvent, std::vector<NoteEvent>, PrioritizeEarlierTime> note_event_queue;
 
         double needed_until_beat = -1.0; // When the last noteEvent (probably a release) occurs. Only needed for temp instances
-        int temp_key; // For temp instances, the key temporarily used to access this.
+        int temp_key = -1; // For temp instances, the key temporarily used to access this.
     };
 
     static OvenMitInstance instance[FIXED_INSTANCES + TEMP_INSTANCES]; // Statically stores the array of all instances, both fixed and temp
@@ -93,6 +93,7 @@ namespace OvenMit
 
     static int next_temp_key = 0; // Counts upward
     inline int GetNewTempOvenMitInstanceKey(double needed_until_beat) {
+        std::cout << "OvenMit: GetNewTempOvenMitInstanceKey with needed_until_beat " << needed_until_beat << std::endl;
         next_temp_key++;
         if (temp_synth_index_queue.empty()) {
             initializeTempSynthIndexQueue();
@@ -103,15 +104,20 @@ namespace OvenMit
         OvenMitInstance* instance =  GetOvenMitInstance(temp_synth_index); // Initializes the values if they haven't been
         instance->needed_until_beat = needed_until_beat;
 
+        std::cout << " ...using the instance with index " << temp_synth_index << std::endl;
+
         // Change the keys
         auto entry = key_to_temp_synth_index.find(instance->temp_key);
         if (entry != end(key_to_temp_synth_index)) key_to_temp_synth_index.erase(entry); // Invalidate the old key
         instance->temp_key = next_temp_key; // Set the new key on the instance
         key_to_temp_synth_index.insert({instance->temp_key, temp_synth_index}); // Set the new key in the lookup
 
+        std::cout << " ...setting the new temp_key to: " << instance->temp_key << std::endl;
+
         // Reorder the queue now that the sorting will have changed
         temp_synth_index_queue.pop();
         temp_synth_index_queue.push(temp_synth_index);
+        std::cout << " ...finished." << std::endl;
         return next_temp_key;
     }
 
@@ -119,8 +125,8 @@ namespace OvenMit
     {
         std::cout << "OvenMit: InternalRegisterEffectDefinition..." << std::endl;
         definition.paramdefs = new UnityAudioParameterDefinition[UNITY_PARAM_NUM];
-        RegisterParameter( definition, "Synth Instance", "", 0, FIXED_INSTANCES-1, 0, 1.0f, 1.0f, 0,
-            "Which native instance of OvenMit should this audio bus receive audio data from?"
+        RegisterParameter( definition, "Synth Instance", "", 0, FIXED_INSTANCES-1 + 1, 0, 1.0f, 1.0f, 0,
+            "Which native instance of OvenMit should this audio bus receive audio data from? The highest is for temporary SFX"
         );
         std::cout << "...finished" << std::endl;
         return UNITY_PARAM_NUM;
@@ -180,7 +186,12 @@ namespace OvenMit
             // Synthesizer does MAGIC to compute samples
             // std::cout << "...outputSamples from " << frame << " to " << frame+framesToNext << std::endl;
 
-            if (!synth->isIdle()) synth->outputSamples(outbuffer, frame, frame+framesToNext, outchannels, false); // No need to reset the output buffer, did it up top
+            if (synth->isIdle()) {
+                // std::cout << "  ...instance with temp_key " << instance->temp_key << " is idle." << std::endl;
+            } else {
+                // std::cout << "  ...instance with temp_key " << instance->temp_key << " is outputting " << framesToNext << " samples." << std::endl;
+                synth->outputSamples(outbuffer, frame, frame+framesToNext, outchannels, false); // No need to reset the output buffer, did it up top
+            }
 
             frame += framesToNext;
             tick += framesToNext;
@@ -308,7 +319,7 @@ namespace OvenMit
         instance->synth.setControl(parameter_index, value);
         std::cout << "   ...finished." << std::endl;
     }
-    extern "C" UNITY_AUDIODSP_EXPORT_API bool OvenMit_GetTempSynthKey(double needed_until_beat) {
+    extern "C" UNITY_AUDIODSP_EXPORT_API int OvenMit_GetTempSynthKey(double needed_until_beat) {
         std::cout << "OvenMit_GetTempSynthKey(), needed_until_beat " << needed_until_beat << std::endl;
 
         // Call the existing function
@@ -331,10 +342,23 @@ namespace OvenMit
         return true;
     }
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetSynthPan(int instance_index, float pan, int outchannels=2) {
-        std::cout << "OvenMit_SetPan for instance " << instance_index << " to " << pan << std::endl;
+        std::cout << "OvenMit_SetSynthPan for instance " << instance_index << " to " << pan << std::endl;
         OvenMitInstance* instance = GetOvenMitInstance(instance_index);
         instance->synth.setPanningFactors(pan, outchannels);
         std::cout << "   ...finished." << std::endl;
+    }
+
+    extern "C" UNITY_AUDIODSP_EXPORT_API bool OvenMit_SetTempSynthPan(int instance_key, float pan, int outchannels=2) {
+        std::cout << "OvenMit_SetTempSynthPan for instance key " << instance_key << " to " << pan << std::endl;
+
+        // Check the key provided
+        auto it = key_to_temp_synth_index.find(instance_key);
+        if (it == key_to_temp_synth_index.end()) return false; // The key used is invalid or expired
+
+        OvenMit_SetSynthPan(it->second, pan, outchannels);
+
+        std::cout << "   ...finished." << std::endl;
+        return true;
     }
 
     extern "C" UNITY_AUDIODSP_EXPORT_API double OvenMit_GetGlobalBeat() {

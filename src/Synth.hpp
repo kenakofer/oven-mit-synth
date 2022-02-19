@@ -51,14 +51,14 @@ public:
             throw std::invalid_argument ("outchannels is greater than MAX_CHANNELS!");
         }
 
+        // Conditionally reset the outs to 0 since it may still have data from last time
+        if (reset_output) for (int i = start*outchannels; i < end*outchannels; ++i) {
+            audio_out_ptr[i] = 0.0f;
+        }
+
         idle = true; // Set to false in these loops if a key is run.
         for (uint32_t i = start; i < end; ++i)
         {
-            // Conditionally reset the outs to 0 since it may still have data from last time
-            if (reset_output) for (int j=0; j<outchannels; j++) {
-                audio_out_ptr[i*outchannels+j] = 0.0f;
-            }
-
             if (controls.get(P_VOICE_MODE) == VOICE_POLY) {
 
                 keys.startLoop();
@@ -83,7 +83,7 @@ public:
                     const float outvalue = monoKey.get();
                     // Output to pointer
                     for (int j=0; j<outchannels; j++) {
-                        audio_out_ptr[i*outchannels+j] = outvalue;
+                        audio_out_ptr[i*outchannels+j] += outvalue;
                     }
                     // Proceed just the one key
                     monoKey.proceed();
