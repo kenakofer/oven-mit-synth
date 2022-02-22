@@ -32,7 +32,7 @@ namespace OvenMit
         public static extern void OvenMit_SetSynthParameter(int instance, int parameterIndex, float value);
 
         [DllImport("OvenMit")]
-        public static extern void OvenMit_SetSynthPan(int instance_index, float pan, int outchannels);
+        public static extern void OvenMit_SetSynthPan(int instance_index, float left, float right);
 
         [DllImport("OvenMit")]
         public static extern double OvenMit_GetGlobalBeat();
@@ -50,6 +50,6 @@ namespace OvenMit
         [DllImport("OvenMit")]
         public static extern bool OvenMit_ScheduleTempNote(int instanceKey, int midiNote, int velocity, double startbeat, double endbeat);
         [DllImport("OvenMit")]
-        public static extern bool OvenMit_SetTempSynthPan(int instance_key, float pan, int outchannels);
+        public static extern bool OvenMit_SetTempSynthPan(int instance_key, float left, float right);
     }
 }

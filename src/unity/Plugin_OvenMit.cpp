@@ -341,21 +341,21 @@ namespace OvenMit
         std::cout << "   ...finished." << std::endl;
         return true;
     }
-    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetSynthPan(int instance_index, float pan, int outchannels=2) {
-        std::cout << "OvenMit_SetSynthPan for instance " << instance_index << " to " << pan << std::endl;
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetSynthPan(int instance_index, float left, float right) {
+        std::cout << "OvenMit_SetSynthPan for instance " << instance_index << " to left: " << left << " and right: " << right << std::endl;
         OvenMitInstance* instance = GetOvenMitInstance(instance_index);
-        instance->synth.setPanningFactors(pan, outchannels);
+        instance->synth.setPanningFactors(left, right);
         std::cout << "   ...finished." << std::endl;
     }
 
-    extern "C" UNITY_AUDIODSP_EXPORT_API bool OvenMit_SetTempSynthPan(int instance_key, float pan, int outchannels=2) {
-        std::cout << "OvenMit_SetTempSynthPan for instance key " << instance_key << " to " << pan << std::endl;
+    extern "C" UNITY_AUDIODSP_EXPORT_API bool OvenMit_SetTempSynthPan(int instance_key, float left, float right) {
+        std::cout << "OvenMit_SetTempSynthPan for instance " << instance_key << " to left: " << left << " and right: " << right << std::endl;
 
         // Check the key provided
         auto it = key_to_temp_synth_index.find(instance_key);
         if (it == key_to_temp_synth_index.end()) return false; // The key used is invalid or expired
 
-        OvenMit_SetSynthPan(it->second, pan, outchannels);
+        OvenMit_SetSynthPan(it->second, left, right);
 
         std::cout << "   ...finished." << std::endl;
         return true;

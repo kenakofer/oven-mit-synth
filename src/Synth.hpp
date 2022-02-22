@@ -41,7 +41,7 @@ public:
         keys ()
     {
         controls = Controls(sample_rate);
-        setPanningFactors(.5, 1); // Panning factors for centered sound.
+        setPanningFactors(1, 1); // Left and right equal at normal volume
     }
 
     inline void outputSamples(float* audio_out_ptr, const uint32_t start, const uint32_t end, const int outchannels=1, const bool reset_output=true)
@@ -181,20 +181,9 @@ public:
         monoKey.mute();
     }
 
-    inline void setPanningFactors(float pan, int channel_number) {
-        switch (channel_number) {
-        case 1:
-            panning_factors[0] = 1.0f - fabs(pan - .5);
-            panning_factors[1] = 1.0f - fabs(pan - .5); // This value probably won't get used, but just in case...
-            break;
-        case 2:
-            // Linear panning law with x2 so centered sound is similar volume between mono and stereo
-            panning_factors[0] = 2 * (1.0f - pan);
-            panning_factors[1] = 2 * pan;
-            break;
-        }
-
-        return;
+    inline void setPanningFactors(float left, float right) {
+        panning_factors[0] = left;
+        panning_factors[1] = right;
     }
 
     inline bool isIdle() {
