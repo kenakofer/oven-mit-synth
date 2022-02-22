@@ -1,0 +1,47 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: g++.exe build active file",
+			"command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+			"args": [
+				"-fdiagnostics-color=always",
+				"-g",
+				"-fvisibility=hidden",
+				"-I.",
+				"-O3",
+				"-ffast-math",
+				"-fPIC",
+				"-Wl,-Bstatic",
+				"-Wl,-Bdynamic",
+				"-Wl,--as-needed",
+
+				// LD flags?
+				"-shared",
+				// "-rdynamic", // not available on Windows? https://stackoverflow.com/questions/29534519/why-gcc-doesnt-recognize-rdynamic-option
+				// "-export-dynamic", // for ELF targets only https://stackoverflow.com/questions/60464176/what-is-the-difference-betwen-export-dynamic-and-export-all-symbols  So why doesn't this work on windows with msys2 mingw64?
+				// "--export-all-symbols", // for PE targets only (same link as above)
+				"-fPIC",
+				"-Wl,--subsystem,windows", // By convention for DLLs https://www.transmissionzero.co.uk/computing/building-dlls-with-mingw/
+				// "-s" // Strips symbols from the DLL, probably want to do this only for release builds?
+
+				"${workspaceFolder}\\src\\unity\\AudioPluginUtil.cpp",
+				"${workspaceFolder}\\src\\unity\\Plugin_OvenMit.cpp",
+				"-o",
+				"${workspaceFolder}\\builds\\unity\\Plugins\\Win64\\libOvenMit.dll"
+			],
+			"options": {
+				"cwd": "C:\\msys64\\mingw64\\bin"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "compiler: C:\\msys64\\mingw64\\bin\\g++.exe"
+		}
+	]
+}
