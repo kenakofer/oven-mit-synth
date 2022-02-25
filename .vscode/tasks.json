@@ -26,6 +26,10 @@
 				"-Wl,--subsystem,windows", // By convention for DLLs https://www.transmissionzero.co.uk/computing/building-dlls-with-mingw/
 				// "-s" // Strips symbols from the DLL, probably want to do this only for release builds?
 
+				"-static", // These three so I don't have to ship a libgcc dll and libstdc++ dll with the plugin, as per https://stackoverflow.com/questions/18138635/mingw-exe-requires-a-few-gcc-dlls-regardless-of-the-code
+				"-static-libgcc",
+				"-static-libstdc++",
+
 				"${workspaceFolder}\\src\\unity\\AudioPluginUtil.cpp",
 				"${workspaceFolder}\\src\\unity\\Plugin_OvenMit.cpp",
 				"-o",
