@@ -92,7 +92,7 @@ inline float valueFromThinNoiseCache(float position) {
     int i = (int)(WHITEBAND1000TO1100_LENGTH * position / SAMPLES_PER_THIN_NOISE_CYCLE);
     i %= WHITEBAND1000TO1100_LENGTH;
 
-    return CACHE_WHITEBAND1000TO1100[0][i];
+    return CACHE_WHITEBAND1000TO1100[i];
 
 }
 const float SAMPLES_PER_THICK_NOISE_CYCLE = 44100.0f / 250;
@@ -100,7 +100,7 @@ inline float valueFromThickNoiseCache(float position) {
     int i = (int)(WHITEBAND1000TO1500_LENGTH * position / SAMPLES_PER_THICK_NOISE_CYCLE);
     i %= WHITEBAND1000TO1500_LENGTH;
 
-    return CACHE_WHITEBAND1000TO1500[0][i];
+    return CACHE_WHITEBAND1000TO1500[i];
 
 }
 const float SAMPLES_PER_THICKER_NOISE_CYCLE = 44100.0f / 250;
@@ -108,7 +108,7 @@ inline float valueFromThickerNoiseCache(float position) {
     int i = (int)(WHITEBAND1000TO4000_LENGTH * position / SAMPLES_PER_THICKER_NOISE_CYCLE);
     i %= WHITEBAND1000TO4000_LENGTH;
 
-    return CACHE_WHITEBAND1000TO4000[0][i];
+    return CACHE_WHITEBAND1000TO4000[i];
 
 }
 
@@ -122,6 +122,7 @@ inline float lowPassNoise(float bottom_freq, float partial_index, float position
     if (top_freq > NOISE_CUTOFF_FREQ) top_freq = NOISE_CUTOFF_FREQ; // Due to frequency scaling
 
     pfreq = bottom_freq * p;
+    // Stack slices of noise until it reaches the top freq. Use thicker slabs of noise if we have more distance to cover yet.
     while (pfreq < top_freq) {
         float ratio = top_freq / pfreq;
 
