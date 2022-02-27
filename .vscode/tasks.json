@@ -13,12 +13,14 @@
 				"-O3",
 				"-ffast-math",
 				"-fPIC",
-				"-Wl,-Bstatic",
-				"-Wl,-Bdynamic",
-				"-Wl,--as-needed",
+				// "-Wl,-Bstatic",
+				// "-Wl,-Bdynamic",
+				// "-Wl,--as-needed",
 
 				// LD flags?
+				"-static",
 				"-shared",
+
 				// "-rdynamic", // not available on Windows? https://stackoverflow.com/questions/29534519/why-gcc-doesnt-recognize-rdynamic-option
 				// "-export-dynamic", // for ELF targets only https://stackoverflow.com/questions/60464176/what-is-the-difference-betwen-export-dynamic-and-export-all-symbols  So why doesn't this work on windows with msys2 mingw64?
 				// "--export-all-symbols", // for PE targets only (same link as above)
@@ -26,14 +28,18 @@
 				"-Wl,--subsystem,windows", // By convention for DLLs https://www.transmissionzero.co.uk/computing/building-dlls-with-mingw/
 				// "-s" // Strips symbols from the DLL, probably want to do this only for release builds?
 
-				"-static", // These three so I don't have to ship a libgcc dll and libstdc++ dll with the plugin, as per https://stackoverflow.com/questions/18138635/mingw-exe-requires-a-few-gcc-dlls-regardless-of-the-code
-				"-static-libgcc",
-				"-static-libstdc++",
-
 				"${workspaceFolder}\\src\\unity\\AudioPluginUtil.cpp",
 				"${workspaceFolder}\\src\\unity\\Plugin_OvenMit.cpp",
 				"-o",
-				"${workspaceFolder}\\builds\\unity\\Plugins\\Win64\\libOvenMit.dll"
+				"${workspaceFolder}\\builds\\unity\\Plugins\\Win64\\libOvenMit.dll",
+				
+				"-static",
+				// "-static-libgcc",
+				// "-static-libstdc++",
+				// "-Wl,-Bstatic",
+				// "-lstdc++",
+				// "-lpthread",
+				// "-Wl,-Bdynamic"
 			],
 			"options": {
 				"cwd": "C:\\msys64\\mingw64\\bin"
