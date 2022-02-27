@@ -9,5 +9,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 cd "$SCRIPT_DIR"/../unity || exit 1
 make clean && make nix || exit 1 # Build for linux
-make clean && make win32 || exit 1 # Build for windows
-make clean && make win64 || exit 1 # Build for windows
+
+# Windows build isn't working. Instead, boot to windows and run the VScode tasks.json
+# make clean && make win32 || exit 1 # Build for windows
+# make clean && make win64 || exit 1 # Build for windows
