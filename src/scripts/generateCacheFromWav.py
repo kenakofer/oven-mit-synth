@@ -5,6 +5,7 @@ from sys import argv
 from array import array
 
 
+AMP_MULTIPLIER = 4
 
 
 if __name__ == "__main__":
@@ -28,7 +29,7 @@ if __name__ == "__main__":
         typestring = "constexpr std::array<const float, "+str(len(frames))+">"
         print(typestring, "CACHE_"+variable_name, "=")
         print("{{")
-        float_strings = map(lambda v: "{:10.6f}f".format(v), frames)
+        float_strings = map(lambda v: "{:10.10f}f".format(AMP_MULTIPLIER * v), frames)
         string = ",".join(float_strings)
         print(string)
         print("}};")
