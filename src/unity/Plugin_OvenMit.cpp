@@ -18,6 +18,7 @@ namespace OvenMit
     static double global_samples_per_beat = 22100; // Default value: 120 bpm at 44.1 khz. Can be changed whenever by API calls.
     static double global_beat = 0.0;    // Beat is tracked additively based on increases in the sample divided by global_samples_per_beat
     static UInt64 global_sample = 0;    // This is simply copied from state->currdsptick. We only keep track of it as a convenient flag for if we need to run the global update.
+    static bool global_pause = false;   // When paused, the global beat will not be updated and the process callbacks will return 0 without running any synths.
     static bool initialized[FIXED_INSTANCES+TEMP_INSTANCES] = { false };
 
     // This parameter is just for the instance of the AudioEffect that's
@@ -231,15 +232,18 @@ namespace OvenMit
     {
         // TODO find a way for this method to work when two audioeffects share the same synth index
 
+        // Reset the output buffer
+        for (int i = 0; i < length*outchannels; ++i) {
+            outbuffer[i] = 0.0f;
+        }
+
+        if (global_pause) return UNITY_AUDIODSP_OK;
+
         // Run the globalProcess only once, no matter if we have 1 or 32 synths
         if (global_sample != state->currdsptick) {
             globalProcess(state);
         }
 
-        // Reset the output buffer
-        for (int i = 0; i < length*outchannels; ++i) {
-            outbuffer[i] = 0.0f;
-        }
 
         int synthIndex = state->GetEffectData<EffectData>()->parameters[INSTANCE_INDEX];
         if (synthIndex >= TEMP_INSTANCES_SINK) {
@@ -375,6 +379,11 @@ namespace OvenMit
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_ResetPlugin() {
         std::cout << "OvenMit_ResetPlugin (finished)" << std::endl;
         for (int i=0; i<FIXED_INSTANCES; i++) initialized[i] = false;
+    }
+
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_SetPause(bool pause) {
+        std::cout << "OvenMit_SetPause (finished)" << std::endl;
+        global_pause = pause;
     }
 
 

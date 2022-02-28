@@ -51,5 +51,7 @@ namespace OvenMit
         public static extern bool OvenMit_ScheduleTempNote(int instanceKey, int midiNote, int velocity, double startbeat, double durationBeats);
         [DllImport("OvenMit")]
         public static extern bool OvenMit_SetTempSynthPan(int instance_key, float left, float right);
+        [DllImport("OvenMit")]
+        public static extern bool OvenMit_SetPause(bool pause);
     }
 }
