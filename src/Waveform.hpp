@@ -159,6 +159,8 @@ inline float highPassNoise(float fund_freq, float partial_index, float position)
     float value = 0.0f;
     float pfreq, top_freq, bottom_freq, p;
 
+    if (partial_index < 0) partial_index = 0;
+
     bottom_freq = fund_freq * (partial_index + 1);
 
     // Pretend the fund is constant from here on out so that we aren't messing with the position delta if pitch is changing in the synth
