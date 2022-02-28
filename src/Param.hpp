@@ -53,7 +53,7 @@ constexpr std::array<std::pair<float, float>, P_NUM_CONTROLS> PARAM_LIMIT =
 
     {0.0f, 1.0f},           // FILTER
     {0.0f, 200.0f},         // CUTOFF
-    {0.0f, 8.0f},           // RES_HEIGHT
+    {-1.0f, 8.0f},           // RES_HEIGHT
     {1.0f, 30.0f},          // RES_WIDTH
 
     {0.0f, 4.0f},           // ENV MODE 2

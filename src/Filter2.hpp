@@ -12,7 +12,7 @@ inline float lowPassInWave(Waveform waveform, float freq, float position, float 
     if (cutoff_partial > max_cutoff_partial) cutoff_partial = max_cutoff_partial;
     float value = valueFromCache(waveform, cutoff_partial-1, position);
 
-    if (res_height <= 0.0) return value;
+    if (res_height == 0.0) return value;
 
     float resonance = value - valueFromCache(waveform, cutoff_partial-1-res_width, position);
 
@@ -28,7 +28,7 @@ inline float highPassInWave(Waveform waveform, float freq, float position, float
     // float max_value = valueFromCache(waveform, max_cutoff_partial-1, position);
     float value = max_value - valueFromCache(waveform, cutoff_partial-1, position);
 
-    if (res_height <= 0.0) return value;
+    if (res_height == 0.0) return value;
 
     float resonance = value - (max_value - valueFromCache(waveform, cutoff_partial-1+res_width, position));
 
