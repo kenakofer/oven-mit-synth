@@ -339,8 +339,12 @@ inline void Key::proceed ()
     if (controls->get(P_WAVEFORM_2_MODE) == OSC_FM_1) {
         modfreq1 *= 1 + synth2();
     }
-    // Move Osc 1 forward correctly.
-    position += modfreq1 / rate;
+    // Move Osc 1 forward correctly. hipass noise is a special case where we actually want the progression through the cache to be constant
+    if (controls->get(P_WAVEFORM) == WAVEFORM_NOISE && controls->get(P_FILTER) == FILTER_HIGHPASS) {
+        position += 256 / rate;
+    } else {
+        position += modfreq1 / rate;
+    }
 
     // Calculate instantaneous frequncy for osc 2
     modfreq2 = freq2;

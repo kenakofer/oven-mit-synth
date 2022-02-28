@@ -154,41 +154,50 @@ inline float lowPassNoise(float bottom_freq, float partial_index, float position
     return value;
 }
 
+// static int i=0;
 inline float highPassNoise(float fund_freq, float partial_index, float position) {
     float value = 0.0f;
     float pfreq, top_freq, bottom_freq, p;
 
+    bottom_freq = fund_freq * (partial_index + 1);
 
-    p = partial_index + 1;
-    bottom_freq = fund_freq * p;
+    // Pretend the fund is constant from here on out so that we aren't messing with the position delta if pitch is changing in the synth
+    fund_freq = 250.0f;
+
     top_freq = NOISE_CUTOFF_FREQ;
+
+    // i = (i+1) % 1024;
 
     p = top_freq / fund_freq; // P will decrease toward 0 each time
     pfreq = top_freq;
+
+    // if (i == 0) std::cout << "fund: " << fund_freq << " p: " << p << " bottom: " << bottom_freq << " top: " << top_freq << std::endl;
+
     while (pfreq > bottom_freq) {
+        // if (i==0) std::cout << "pfreq: " << pfreq << std::endl;
         float ratio = pfreq / bottom_freq;
 
         if (ratio > 4.5) {
-            // std::cout << "4";
+            // if (i==0) std::cout << "4";
             p /= 4.0f;
             value += valueFromThickerNoiseCache(position * p);
         } else if (ratio > 1.6) {
-            // std::cout << "1";
+            // if (i==0) std::cout << "1";
             p /= 1.4f;
             value += valueFromThickNoiseCache(position * p);
         } else {
             p /= 1.1f;
             if (ratio > 1.33) {
-                // std::cout << ",";
+                // if (i==0) std::cout << ",";
                 value += valueFromThinNoiseCache(position * p);
             } else {
-                // std::cout << ".";
+                // if (i==0) std::cout << ".";
                 value += (ratio - 1.0) * 3 * valueFromThinNoiseCache(position * p);
             }
         }
         pfreq = fund_freq * p;
     }
-    // std::cout << std::endl;
+    // if (i==0) std::cout << std::endl;
     return value;
 }
 
