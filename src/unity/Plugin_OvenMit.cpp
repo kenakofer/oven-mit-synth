@@ -290,24 +290,25 @@ namespace OvenMit
         std::cout << "   ...finished." << std::endl;
     }
 
-    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_ScheduleNote(int instance_index, int midiNote, int velocity, double startbeat, double endbeat) {
-        if (startbeat >= endbeat) endbeat = startbeat + 0.0001; // Don't allow 0 or negative width notes
+    extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_ScheduleNote(int instance_index, int midiNote, int velocity, double start_beat, double duration_beats) {
         std::cout << "OvenMit_ScheduleNote..." << std::endl;
+        if (start_beat < global_beat) start_beat = global_beat;
+        if (duration_beats <= 0) duration_beats = .0001; // Don't allow 0 or negative width notes
+        double endbeat = start_beat + duration_beats;
         OvenMitInstance* instance = GetOvenMitInstance(instance_index);
-        std::cout << "  ...Push start" << instance_index << " " << midiNote << " " << velocity << " " << startbeat << " " << endbeat << std::endl;
-        instance->note_event_queue.push(NoteEvent(NoteStart, startbeat, instance_index, midiNote, velocity));
+        std::cout << "  ...Push start" << instance_index << " " << midiNote << " " << velocity << " " << start_beat << " " << endbeat << std::endl;
+        instance->note_event_queue.push(NoteEvent(NoteStart, start_beat, instance_index, midiNote, velocity));
         std::cout << "  ...Push end" << std::endl;
         instance->note_event_queue.push(NoteEvent(NoteRelease, endbeat, instance_index, midiNote, velocity));
         std::cout << "   ...finished." << std::endl;
     }
-    extern "C" UNITY_AUDIODSP_EXPORT_API bool OvenMit_ScheduleTempNote(int instance_key, int midiNote, int velocity, double startbeat, double endbeat) {
+    extern "C" UNITY_AUDIODSP_EXPORT_API bool OvenMit_ScheduleTempNote(int instance_key, int midiNote, int velocity, double start_beat, double duration_beats) {
         std::cout << "OvenMit_ScheduleTempNote..." << std::endl;
-        if (startbeat >= endbeat) endbeat = startbeat + 0.0001; // Don't allow 0 or negative width notes
         // Check the key provided
         auto it = key_to_temp_synth_index.find(instance_key);
         if (it == key_to_temp_synth_index.end()) return false; // The key used is invalid or expired
 
-        OvenMit_ScheduleNote(it->second, midiNote, velocity, startbeat, endbeat);
+        OvenMit_ScheduleNote(it->second, midiNote, velocity, start_beat, duration_beats);
 
         // TODO would be nice to change in priority queue to endbeat
         return true;
