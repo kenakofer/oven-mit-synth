@@ -89,27 +89,36 @@ inline float rawValueFromCache(Waveform waveform, int partial_index, int positio
 
 const float SAMPLES_PER_THIN_NOISE_CYCLE = 44100.0f / 250;
 inline float valueFromThinNoiseCache(float position) {
-    int i = (int)(WHITEBAND1000TO1100_LENGTH * position / SAMPLES_PER_THIN_NOISE_CYCLE);
-    i %= WHITEBAND1000TO1100_LENGTH;
+    const float cache_sample_float = WHITEBAND1000TO1100_LENGTH * position / SAMPLES_PER_THIN_NOISE_CYCLE;
+    const int left_sample_unmodded = ((int)cache_sample_float);
+    const int left_sample = left_sample_unmodded % WHITEBAND1000TO1100_LENGTH;
+    const int right_sample = (left_sample + 1) % WHITEBAND1000TO1100_LENGTH;
+    const float s2 = cache_sample_float - left_sample_unmodded;
+    const float s1 = 1.0f - s2;
 
-    return CACHE_WHITEBAND1000TO1100[i];
-
+    return s1*CACHE_WHITEBAND1000TO1100[left_sample] + s2*CACHE_WHITEBAND1000TO1100[right_sample];
 }
 const float SAMPLES_PER_THICK_NOISE_CYCLE = 44100.0f / 250;
 inline float valueFromThickNoiseCache(float position) {
-    int i = (int)(WHITEBAND1000TO1500_LENGTH * position / SAMPLES_PER_THICK_NOISE_CYCLE);
-    i %= WHITEBAND1000TO1500_LENGTH;
+    const float cache_sample_float = WHITEBAND1000TO1500_LENGTH * position / SAMPLES_PER_THICK_NOISE_CYCLE;
+    const int left_sample_unmodded = ((int)cache_sample_float);
+    const int left_sample = left_sample_unmodded % WHITEBAND1000TO1500_LENGTH;
+    const int right_sample = (left_sample + 1) % WHITEBAND1000TO1500_LENGTH;
+    const float s2 = cache_sample_float - left_sample_unmodded;
+    const float s1 = 1.0f - s2;
 
-    return CACHE_WHITEBAND1000TO1500[i];
-
+    return s1*CACHE_WHITEBAND1000TO1500[left_sample] + s2*CACHE_WHITEBAND1000TO1500[right_sample];
 }
 const float SAMPLES_PER_THICKER_NOISE_CYCLE = 44100.0f / 250;
 inline float valueFromThickerNoiseCache(float position) {
-    int i = (int)(WHITEBAND1000TO4000_LENGTH * position / SAMPLES_PER_THICKER_NOISE_CYCLE);
-    i %= WHITEBAND1000TO4000_LENGTH;
+    const float cache_sample_float = WHITEBAND1000TO4000_LENGTH * position / SAMPLES_PER_THICKER_NOISE_CYCLE;
+    const int left_sample_unmodded = ((int)cache_sample_float);
+    const int left_sample = left_sample_unmodded % WHITEBAND1000TO4000_LENGTH;
+    const int right_sample = (left_sample + 1) % WHITEBAND1000TO4000_LENGTH;
+    const float s2 = cache_sample_float - left_sample_unmodded;
+    const float s1 = 1.0f - s2;
 
-    return CACHE_WHITEBAND1000TO4000[i];
-
+    return s1*CACHE_WHITEBAND1000TO4000[left_sample] + s2*CACHE_WHITEBAND1000TO4000[right_sample];
 }
 
 const float NOISE_CUTOFF_FREQ = NYQUIST_FREQ * .35;
