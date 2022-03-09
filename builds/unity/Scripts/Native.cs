@@ -42,6 +42,8 @@ namespace OvenMit
         [DllImport("OvenMit")]
         public static extern void OvenMit_ResetPlugin();
         [DllImport("OvenMit")]
+        public static extern bool OvenMit_SetPause(bool pause);
+        [DllImport("OvenMit")]
 
         // Temp synth stuff, for short, on-demand sounds
         public static extern int OvenMit_GetTempSynthKey(double reserveUntilBeat);
@@ -52,6 +54,9 @@ namespace OvenMit
         [DllImport("OvenMit")]
         public static extern bool OvenMit_SetTempSynthPan(int instance_key, float left, float right);
         [DllImport("OvenMit")]
-        public static extern bool OvenMit_SetPause(bool pause);
+        public static extern bool OvenMit_StopAllTempNotes(int instance_key);
+        [DllImport("OvenMit")]
+        public static extern bool OvenMit_StopAllTempSounds(int instance_key);
+
     }
 }

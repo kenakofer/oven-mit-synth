@@ -286,12 +286,31 @@ namespace OvenMit
         GetOvenMitInstance(instance_index)->synth.stopAllNotes();
         std::cout << "   ...finished." << std::endl;
     }
+    extern "C" UNITY_AUDIODSP_EXPORT_API bool OvenMit_StopAllTempNotes(int instance_key) {
+        std::cout << "OvenMit_StopAllTempNotes..." << std::endl;
+        auto it = key_to_temp_synth_index.find(instance_key);
+        if (it == key_to_temp_synth_index.end()) return false; // The key used is invalid or expired
+
+        OvenMit_StopAllNotes(it->second);
+        std::cout << "   ...finished." << std::endl;
+        return true;
+    }
 
     // TODO stopallsounds taking no parameters does so for all instances.
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_StopAllSounds(int instance_index) {
         std::cout << "OvenMit_StopAllSounds..." << std::endl;
         GetOvenMitInstance(instance_index)->synth.stopAllSounds();
         std::cout << "   ...finished." << std::endl;
+    }
+
+    extern "C" UNITY_AUDIODSP_EXPORT_API bool OvenMit_StopAllTempSounds(int instance_key) {
+        std::cout << "OvenMit_StopAllTempSounds..." << std::endl;
+        auto it = key_to_temp_synth_index.find(instance_key);
+        if (it == key_to_temp_synth_index.end()) return false; // The key used is invalid or expired
+
+        OvenMit_StopAllSounds(it->second);
+        std::cout << "   ...finished." << std::endl;
+        return true;
     }
 
     extern "C" UNITY_AUDIODSP_EXPORT_API void OvenMit_ScheduleNote(int instance_index, int midiNote, int velocity, double start_beat, double duration_beats) {
